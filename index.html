@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruang Game Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1f2347; --bg:#eef2ff; --sun:#ffc933; --coral:#ff6b6b; --mint:#2ec4a6; --sky:#4d96ff; --grape:#8b5cf6;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --body:"Nunito",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  background-image:radial-gradient(var(--ink) 1px,transparent 1.5px);background-size:26px 26px;background-position:0 0;
+  background-blend-mode:soft-light}
+.wrap{max-width:960px;margin:0 auto;padding:24px 18px 56px}
+header{padding:28px 0 8px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,8vw,4rem);line-height:1;margin:0 0 10px;letter-spacing:-.5px}
+h1 span{display:inline-block;background:var(--sun);border:3px solid var(--ink);border-radius:14px;padding:0 12px;transform:rotate(-2deg);box-shadow:4px 4px 0 var(--ink)}
+header p{margin:14px 0 0;font-size:1.1rem;max-width:46ch}
+.tools{margin:26px 0 22px}
+.tools input{width:100%;max-width:420px;font:inherit;font-weight:700;color:var(--ink);padding:12px 16px;background:#fff;border:3px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink)}
+.tools input:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
+.card{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink);overflow:hidden;transition:transform .15s,box-shadow .15s}
+a.card:hover,a.card:focus-visible{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--ink)}
+a.card:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+a.card:focus-visible{outline:3px solid var(--sky);outline-offset:4px}
+.top{height:112px;display:flex;align-items:center;justify-content:center;font-size:3.4rem;border-bottom:3px solid var(--ink)}
+.body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.body h2{font-family:var(--display);font-weight:800;font-size:1.35rem;line-height:1.15;margin:0}
+.body p{margin:0;font-size:.95rem}
+.tag{align-self:flex-start;font-weight:700;font-size:.8rem;border:2px solid var(--ink);border-radius:99px;padding:1px 10px;background:var(--bg)}
+.play{margin-top:auto;padding-top:10px;font-family:var(--display);font-weight:800;font-size:1.1rem}
+.soon{background:#f6f6fb;border-style:dashed;box-shadow:none;opacity:.8}
+.soon .top{background:repeating-linear-gradient(45deg,#e4e6f5,#e4e6f5 10px,#eef0fb 10px,#eef0fb 20px)}
+.empty{display:none;font-weight:700;padding:20px 0}
+footer{margin-top:44px;font-size:.9rem;opacity:.75}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ruang <span>Game</span> Belajar</h1>
+    <p>Muhammad Ihsan, S. Pd. Gr</p>
+  </header>
+
+  <div class="tools">
+    <input id="cari" type="search" placeholder="Cari game atau materi…" aria-label="Cari game">
+  </div>
+
+  <main>
+    <div class="grid" id="daftar"></div>
+    <p class="empty" id="kosong">Belum ada game yang cocok. Coba kata kunci lain.</p>
+  </main>
+
+  <footer>Pendidikan Pancasila · Ruang Game Belajar</footer>
+</div>
+
+<script>
+/* ===== TAMBAH GAME BARU DI SINI =====
+   folder : nama folder game di dalam public/ (mis. "game-uud" untuk public/game-uud/index.html)
+   Hapus baris "soon:true" kalau game sudah siap dimainkan. */
+const GAMES = [
+  { judul:"Detektif Demokrasi", info:"Misteri Santunlandia: pecahkan kasus pejabat yang melanggar demokrasi.", tag:"Pendidikan Pancasila XI", folder:"detektif-demokrasi", ikon:"🕵️", warna:"#ffc933" },
+  { judul:"Game berikutnya", info:"Segera hadir. Pilih materi, lalu buat game barunya.", tag:"Segera hadir", ikon:"🧩", warna:"#4d96ff", soon:true },
+  { judul:"Game berikutnya", info:"Segera hadir. Pilih materi, lalu buat game barunya.", tag:"Segera hadir", ikon:"🎯", warna:"#2ec4a6", soon:true }
+];
+
+const daftar = document.getElementById('daftar');
+const kosong = document.getElementById('kosong');
+const cari = document.getElementById('cari');
+
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+
+function render(q){
+  daftar.replaceChildren();
+  const kata = (q||'').trim().toLowerCase();
+  let n = 0;
+  GAMES.forEach(g=>{
+    if(kata && !(g.judul+' '+g.info+' '+g.tag).toLowerCase().includes(kata)) return;
+    n++;
+    const card = g.soon ? el('div','card soon') : el('a','card');
+    if(!g.soon) card.href = './' + g.folder + '/';
+    const top = el('div','top', g.ikon); top.style.background = g.warna;
+    const body = el('div','body');
+    body.append(el('span','tag',g.tag), el('h2','',g.judul), el('p','',g.info));
+    if(!g.soon) body.append(el('div','play','Mainkan ▶'));
+    card.append(top, body);
+    daftar.append(card);
+  });
+  kosong.style.display = n ? 'none' : 'block';
+}
+cari.addEventListener('input', e=>render(e.target.value));
+render();
+</script>
+</body>
+</html>
