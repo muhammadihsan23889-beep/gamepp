@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruang Game Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --ink:#1f2347; --bg:#eef2ff; --sun:#ffc933; --coral:#ff6b6b; --mint:#2ec4a6; --sky:#4d96ff; --grape:#8b5cf6;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --body:"Nunito",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  background-image:radial-gradient(var(--ink) 1px,transparent 1.5px);background-size:26px 26px;background-blend-mode:soft-light}
+.wrap{max-width:960px;margin:0 auto;padding:24px 18px 56px}
+header{padding:28px 0 8px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,8vw,4rem);line-height:1;margin:0 0 10px;letter-spacing:-.5px}
+h1 span{display:inline-block;background:var(--sun);border:3px solid var(--ink);border-radius:14px;padding:0 12px;transform:rotate(-2deg);box-shadow:4px 4px 0 var(--ink)}
+header p{margin:14px 0 0;font-size:1.1rem;max-width:46ch}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 4px}
+.tab{font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--ink);padding:8px 18px;background:#fff;border:3px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--sun)}
+.tab:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+.tools{margin:22px 0}
+.tools input{width:100%;max-width:420px;font:inherit;font-weight:700;color:var(--ink);padding:12px 16px;background:#fff;border:3px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
+.card{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink);overflow:hidden;transition:transform .15s,box-shadow .15s}
+a.card:hover,a.card:focus-visible{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--ink)}
+a.card:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+a.card:focus-visible{outline:3px solid var(--sky);outline-offset:4px}
+.top{height:112px;display:flex;align-items:center;justify-content:center;font-size:3.4rem;border-bottom:3px solid var(--ink)}
+.body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.body h2{font-family:var(--display);font-weight:800;font-size:1.35rem;line-height:1.15;margin:0}
+.body p{margin:0;font-size:.95rem}
+.tag{align-self:flex-start;font-weight:700;font-size:.8rem;border:2px solid var(--ink);border-radius:99px;padding:1px 10px;background:var(--bg)}
+.play{margin-top:auto;padding-top:10px;font-family:var(--display);font-weight:800;font-size:1.1rem}
+.soon{background:#f6f6fb;border-style:dashed;box-shadow:none;opacity:.8}
+.soon .top{background:repeating-linear-gradient(45deg,#e4e6f5,#e4e6f5 10px,#eef0fb 10px,#eef0fb 20px)}
+.empty{font-weight:700;padding:20px 0}
+.panel{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink);padding:20px;margin-top:20px}
+.panel h2{font-family:var(--display);font-weight:800;font-size:1.3rem;margin:0 0 6px}
+.panel p{margin:0 0 12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--display);font-weight:800;font-size:1rem;color:var(--ink);padding:9px 16px;background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.btn.sun{background:var(--sun)} .btn.mint{background:var(--mint)} .btn.red{background:var(--coral)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.note{font-weight:700}
+.info{background:#fff8d6;border:2px dashed var(--ink);border-radius:12px;padding:10px 14px;margin-top:12px;font-size:.95rem}
+select{font:inherit;font-weight:700;color:var(--ink);padding:8px 12px;border:3px solid var(--ink);border-radius:12px;background:#fff}
+.scroll{max-height:320px;overflow:auto;border:2px solid var(--ink);border-radius:12px;margin-top:12px}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:7px 12px;border-bottom:1px solid #d9dcf0}
+th{position:sticky;top:0;background:var(--sun);font-family:var(--display)}
+footer{margin-top:44px;font-size:.9rem;opacity:.75}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ruang <span>Game</span> Belajar</h1>
+    <p>Muhammad Ihsan, S. Pd. Gr</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="viewGame" aria-selected="true">🎮 Game</button>
+    <button class="tab" role="tab" data-view="viewSiswa" aria-selected="false">👩‍🎓 Database Siswa</button>
+  </div>
+
+  <section id="viewGame">
+    <div class="tools">
+      <input id="cari" type="search" placeholder="Cari game atau materi…" aria-label="Cari game">
+    </div>
+    <div class="grid" id="daftar"></div>
+    <p class="empty" id="kosong" hidden>Belum ada game yang cocok. Coba kata kunci lain.</p>
+  </section>
+
+  <section id="viewSiswa" hidden>
+    <div class="panel">
+      <h2>1. Unggah data siswa</h2>
+      <p>Gunakan file <b>FORMAT_PRESENSI_SISWA</b> (.xlsx). Satu sheet = satu kelas; nama kelas dibaca dari baris “KELAS / FASE”, nama siswa dari kolom “NAMA PESERTA DIDIK”. Boleh memilih beberapa file sekaligus (kelas X, XI, XII). Mengunggah ulang sebuah kelas akan menggantikan data kelas itu saja.</p>
+      <div class="row">
+        <label class="btn sun" for="berkas">Pilih file Excel</label>
+        <input type="file" id="berkas" accept=".xlsx,.xls" multiple hidden>
+      </div>
+      <p class="note" id="status" style="margin-top:12px"></p>
+    </div>
+
+    <div class="panel" id="hasil" hidden>
+      <h2>2. Periksa dan simpan</h2>
+      <p id="ringkas" class="note"></p>
+      <div class="row">
+        <select id="filter" aria-label="Filter kelas"></select>
+        <button class="btn mint" id="simpan" type="button">Simpan di perangkat ini</button>
+        <button class="btn sun" id="unduh" type="button">Unduh siswa.json</button>
+        <button class="btn red" id="hapus" type="button">Hapus data</button>
+      </div>
+      <div class="scroll"><table><thead><tr><th>Nama</th><th>Kelas</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      <div class="info">
+        <b>Agar terbaca di semua game dan di perangkat siswa:</b> unggah berkas <code>siswa.json</code> ke folder yang sama dengan <code>index.html</code> (Firebase: folder <code>public/</code>; GitHub: halaman utama repository), lalu deploy atau commit. “Simpan di perangkat ini” hanya berlaku di tablet atau komputer yang sedang dipakai.
+      </div>
+      <div class="info">
+        <b>Catatan privasi:</b> situs ini bersifat publik, jadi <code>siswa.json</code> bisa dibaca siapa saja yang tahu alamatnya. Dari file Excel hanya nama dan kelas yang diambil; NISN/NIS tidak dibaca dan tidak disimpan.
+      </div>
+    </div>
+  </section>
+
+  <footer>Pendidikan Pancasila · Ruang Game Belajar</footer>
+</div>
+
+<script>
+/* ===== TAMBAH GAME BARU DI SINI =====
+   folder : nama folder game di dalam public/ (mis. "game-uud" untuk public/game-uud/index.html)
+   Hapus "soon:true" kalau game sudah siap dimainkan. */
+const GAMES = [
+  { judul:"Detektif Demokrasi", info:"Misteri Santunlandia: pecahkan kasus pejabat yang melanggar demokrasi.", tag:"Pendidikan Pancasila XI", folder:"detektif-demokrasi", ikon:"🕵️", warna:"#ffc933" },
+  { judul:"Game berikutnya", info:"Segera hadir. Pilih materi, lalu buat game barunya.", tag:"Segera hadir", ikon:"🧩", warna:"#4d96ff", soon:true },
+  { judul:"Game berikutnya", info:"Segera hadir. Pilih materi, lalu buat game barunya.", tag:"Segera hadir", ikon:"🎯", warna:"#2ec4a6", soon:true }
+];
+
+const $ = id => document.getElementById(id);
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+
+/* ---------- Tab ---------- */
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t===b ? 'true':'false'));
+  ['viewGame','viewSiswa'].forEach(v=>{ $(v).hidden = (v !== b.dataset.view); });
+}));
+
+/* ---------- Daftar game ---------- */
+function renderGame(q){
+  const daftar=$('daftar'); daftar.replaceChildren();
+  const kata=(q||'').trim().toLowerCase(); let n=0;
+  GAMES.forEach(g=>{
+    if(kata && !(g.judul+' '+g.info+' '+g.tag).toLowerCase().includes(kata)) return;
+    n++;
+    const card = g.soon ? el('div','card soon') : el('a','card');
+    if(!g.soon) card.href='./'+g.folder+'/';
+    const top=el('div','top',g.ikon); top.style.background=g.warna;
+    const body=el('div','body');
+    body.append(el('span','tag',g.tag), el('h2','',g.judul), el('p','',g.info));
+    if(!g.soon) body.append(el('div','play','Mainkan ▶'));
+    card.append(top,body); daftar.append(card);
+  });
+  $('kosong').hidden = n>0;
+}
+$('cari').addEventListener('input', e=>renderGame(e.target.value));
+renderGame();
+
+/* ---------- Database siswa ---------- */
+const DB_KEY='siswa_db';
+let siswa=[];
+const setStatus = t => { $('status').textContent=t; };
+
+function parseSheet(rows, sheet){
+  let h=-1, c=-1;
+  for(let r=0; r<Math.min(rows.length,30) && h<0; r++){
+    const i=rows[r].findIndex(x=>/nama\s+peserta\s+didik/i.test(String(x)));
+    if(i>-1){ h=r; c=i; }
+  }
+  if(h<0) return null;
+  let kelas=String(sheet).trim();
+  for(let r=0; r<h; r++){
+    if(/kelas/i.test(String(rows[r][0]))){
+      const m=rows[r].slice(1).map(String).join(' ').match(/([XVI]+)\s*-\s*(\d+)/);
+      if(m) kelas=m[1]+'-'+m[2];
+      break;
+    }
+  }
+  const out=[];
+  for(let r=h+1; r<rows.length; r++){
+    const nama=String(rows[r][c]||'').replace(/\s+/g,' ').trim();
+    if(!nama || /^\d+$/.test(nama)) continue;
+    out.push({nama,kelas});
+  }
+  return {kelas,out};
+}
+
+function tampil(){
+  $('hasil').hidden = !siswa.length;
+  if(!siswa.length) return;
+  const kelas=[...new Set(siswa.map(s=>s.kelas))].sort((a,b)=>a.localeCompare(b,'id',{numeric:true}));
+  $('ringkas').textContent = siswa.length+' siswa · '+kelas.length+' kelas';
+  const f=$('filter'), cur=f.value;
+  f.replaceChildren(new Option('Semua kelas',''));
+  kelas.forEach(k=>f.append(new Option(k,k)));
+  f.value = kelas.includes(cur) ? cur : '';
+  const tb=$('tbody'); tb.replaceChildren();
+  siswa.filter(s=>!f.value || s.kelas===f.value).forEach(s=>{
+    const tr=document.createElement('tr'); tr.append(el('td','',s.nama), el('td','',s.kelas)); tb.append(tr);
+  });
+}
+$('filter').addEventListener('change', tampil);
+
+const bacaFile = f => new Promise((ok,gagal)=>{ const rd=new FileReader(); rd.onload=ev=>ok(ev.target.result); rd.onerror=gagal; rd.readAsArrayBuffer(f); });
+
+$('berkas').addEventListener('change', async e=>{
+  const files=[...e.target.files]; if(!files.length) return;
+  if(typeof XLSX==='undefined'){ setStatus('Pustaka Excel belum termuat. Periksa internet, lalu muat ulang halaman.'); return; }
+  setStatus('Membaca file…');
+  const baru=[], kelasBaru=new Set(), gagal=[];
+  for(const f of files){
+    try{
+      const wb=XLSX.read(await bacaFile(f),{type:'array'});
+      wb.SheetNames.forEach(n=>{
+        const p=parseSheet(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}), n);
+        if(p && p.out.length){ kelasBaru.add(p.kelas); p.out.forEach(s=>baru.push(s)); }
+      });
+    }catch(err){ gagal.push(f.name); }
+  }
+  e.target.value='';
+  if(!baru.length){ setStatus('Tidak ada data terbaca. Pastikan memakai file FORMAT_PRESENSI_SISWA yang memiliki kolom “NAMA PESERTA DIDIK”.'); return; }
+  const seen=new Set();
+  const unik=baru.filter(s=>{ const k=s.nama.toLowerCase()+'|'+s.kelas; if(seen.has(k)) return false; seen.add(k); return true; });
+  siswa=siswa.filter(s=>!kelasBaru.has(s.kelas)).concat(unik);
+  setStatus('Berhasil membaca '+unik.length+' siswa dari '+kelasBaru.size+' kelas.'+(gagal.length?' Gagal dibaca: '+gagal.join(', ')+'.':'')+' Lanjutkan dengan menyimpan atau mengunduh siswa.json.');
+  tampil();
+});
+
+function paket(){ return {diperbarui:new Date().toISOString().slice(0,10), siswa}; }
+
+$('simpan').addEventListener('click', ()=>{
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(paket())); setStatus('Tersimpan di perangkat ini ('+siswa.length+' siswa).'); }
+  catch(e){ setStatus('Gagal menyimpan di perangkat ini.'); }
+});
+
+$('unduh').addEventListener('click', ()=>{
+  const b=new Blob([JSON.stringify(paket())],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='siswa.json';
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  setStatus('siswa.json terunduh. Unggah berkas itu ke situs agar terbaca di semua game.');
+});
+
+$('hapus').addEventListener('click', ()=>{
+  if(!confirm('Hapus data siswa dari tampilan ini dan dari penyimpanan perangkat?')) return;
+  try{ localStorage.removeItem(DB_KEY); localStorage.removeItem('siswa_dipilih'); }catch(e){}
+  siswa=[]; tampil(); setStatus('Data dihapus dari perangkat ini. Jika siswa.json sudah diunggah ke situs, hapus berkas itu juga di sana.');
+});
+
+async function muat(){
+  try{
+    const r=await fetch('./siswa.json',{cache:'no-store'});
+    if(r.ok){ const d=await r.json(); if(d.siswa&&d.siswa.length){ siswa=d.siswa; setStatus('Data dibaca dari siswa.json di situs ('+siswa.length+' siswa).'); tampil(); return; } }
+  }catch(e){}
+  try{
+    const d=JSON.parse(localStorage.getItem(DB_KEY)||'null');
+    if(d&&d.siswa&&d.siswa.length){ siswa=d.siswa; setStatus('Data tersimpan di perangkat ini ('+siswa.length+' siswa).'); tampil(); return; }
+  }catch(e){}
+  setStatus('Belum ada data siswa.');
+}
+muat();
+</script>
+</body>
+</html>
