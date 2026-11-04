@@ -433,7 +433,7 @@ function final(){
 
 /* ===== Papan peringkat ONLINE (Google Apps Script + Google Sheets) ===== */
 const PIN_GURU="1234"; // PIN guru untuk menghapus data peringkat. GANTI sebelum dibagikan ke siswa.
-const PERINGKAT_URL=""; // TEMPEL URL Web App Apps Script di antara tanda kutip. Kosong = peringkat hanya di perangkat ini.
+const PERINGKAT_URL="https://script.google.com/macros/s/AKfycbwGxe5bPDtI4UOEV0abLmOxzuGGzQhXLQpN94iz7K-MaIz2JP37UPWaeJQ9u4wluXGV/exec"; // TEMPEL URL Web App Apps Script di antara tanda kutip. Kosong = peringkat hanya di perangkat ini.
 function antre(){try{return JSON.parse(localStorage.getItem('dd_q'))||[]}catch(e){return[]}}
 function simAntre(a){try{localStorage.setItem('dd_q',JSON.stringify(a))}catch(e){}}
 /* Kirim skor siswa yang tamat; bila offline, simpan di antrean dan kirim ulang saat online */
