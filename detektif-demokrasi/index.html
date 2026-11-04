@@ -22,7 +22,16 @@ input{width:100%;background:#fff;color:#1a1040;cursor:text;margin-top:6px}
 .hud{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;font-weight:800;font-size:.85rem}
 .ib{min-width:48px;padding:6px}
 .hoot{display:flex;align-items:flex-start;gap:8px;margin:8px 0}
-.owl{width:84px;flex:none;animation:nod 3s infinite}
+.owl{width:84px;flex:none;overflow:visible}
+.palu{transform-box:view-box;transform-origin:98px 34px;animation:tok 3.2s ease-in-out infinite}
+.dampak{opacity:0;animation:cik 3.2s infinite}
+@keyframes tok{0%,58%{transform:rotate(30deg)}64%{transform:rotate(0)}70%{transform:rotate(11deg)}75%,84%{transform:rotate(0)}96%,100%{transform:rotate(30deg)}}
+@keyframes cik{0%,62%{opacity:0}64%,68%{opacity:1}71%,73%{opacity:0}75%,79%{opacity:1}83%,100%{opacity:0}}
+@keyframes tokCepat{0%{transform:rotate(30deg)}30%{transform:rotate(0)}50%{transform:rotate(14deg)}75%,100%{transform:rotate(0)}}
+@keyframes cikCepat{0%,22%{opacity:0}30%,42%{opacity:1}50%,66%{opacity:0}75%,88%{opacity:1}100%{opacity:0}}
+.owl.jump .palu{animation:tokCepat .6s 1,tok 3.2s .6s infinite ease-in-out}
+.owl.jump .dampak{animation:cikCepat .6s 1,cik 3.2s .6s infinite}
+@media (prefers-reduced-motion:reduce){.palu,.dampak,.owl.jump .palu,.owl.jump .dampak{animation:none}.palu{transform:rotate(12deg)}}
 .eye{transform-box:fill-box;transform-origin:center;animation:blink 4s infinite}
 @keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
 @keyframes nod{50%{transform:rotate(4deg)}}
@@ -204,7 +213,9 @@ const baru=n=>({nama:n||'',kelas:'',tamat:[],bintang:[0,0,0,0,0],xp:0,skor:0,len
 let S=baru(),R={m:0},suara=true,ac,h4=0;
 function simpan(){try{localStorage.setItem('dd_s',JSON.stringify(S))}catch(e){}}
 function muat(){try{let x=JSON.parse(localStorage.getItem('dd_s'));if(x&&x.nama)S=x}catch(e){}}
-function papan(){try{return JSON.parse(localStorage.getItem('dd_p'))||[]}catch(e){return[]}}
+function rekam(){try{return JSON.parse(localStorage.getItem('dd_r'))||[]}catch(e){return[]}}
+function simRekam(a){try{localStorage.setItem('dd_r',JSON.stringify(a.slice(-3000)))}catch(e){}}
+function papan(){return rekam().sort((a,b)=>b.skor-a.skor).slice(0,5).map(r=>({n:r.nama,s:r.skor}))}
 /* Efek suara sederhana (Web Audio) */
 function AC(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state=='suspended')ac.resume()}catch(e){}return ac}
 /* Musik latar detektif ala noir (dibangkitkan lewat Web Audio, tanpa berkas audio; jalan offline) */
@@ -219,15 +230,15 @@ function togMusik(){musikOn=!musikOn;musikOn?musikMulai():musikBerhenti();let b=
 function bunyi(f,d=.15,t='sine'){if(!suara)return;try{AC();let o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=.12;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.stop(ac.currentTime+d)}catch(e){}}
 const sfx={ok(){bunyi(660);setTimeout(()=>bunyi(880),90)},no(){bunyi(180,.3,'sawtooth')},obj(){bunyi(300,.1,'square');setTimeout(()=>bunyi(620,.35,'square'),110)},win(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>bunyi(f,.2),i*130))}};
 function togSuara(){suara=!suara;let b=$('#sn');if(b)b.textContent=suara?'🔊':'🔇'}
-/* Profesor Hootie (SVG buatan sendiri) */
-const owl=()=>`<svg class="owl" viewBox="0 0 120 130"><ellipse cx="60" cy="84" rx="38" ry="40" fill="#7b4bd1" stroke="#f5c542" stroke-width="3"/><ellipse cx="60" cy="94" rx="24" ry="27" fill="#ffe9a8"/><path d="M30 72q-14 15-4 38q14-6 12-30zM90 72q14 15 4 38q-14-6-12-30z" fill="#5b2a9d"/><circle cx="46" cy="66" r="15" fill="#fff"/><circle cx="74" cy="66" r="15" fill="#fff"/><g class="eye"><circle cx="46" cy="68" r="7" fill="#111"/><circle cx="74" cy="68" r="7" fill="#111"/><circle cx="44" cy="65" r="2.5" fill="#fff"/><circle cx="72" cy="65" r="2.5" fill="#fff"/></g><path d="M54 78l6 10l6-10z" fill="#ff8a2b"/><path d="M26 46h68l-8-8q-4-24-26-24t-26 24z" fill="#0b1437" stroke="#f5c542" stroke-width="3"/><rect x="34" y="40" width="52" height="6" fill="#f5c542"/><circle cx="98" cy="100" r="11" fill="#2ee6d655" stroke="#f5c542" stroke-width="4"/><path d="M106 108l10 14" stroke="#f5c542" stroke-width="5" stroke-linecap="round"/></svg>`;
+/* Palu Sidang pemandu (SVG buatan sendiri, beranimasi) */
+const owl=()=>`<svg class="owl" viewBox="0 0 120 130" role="img" aria-label="Palu sidang"><g class="dampak" stroke="#f5c542" stroke-width="4" stroke-linecap="round"><path d="M22 92L11 85M20 98H7M70 92l11-7M72 98h13"/></g><rect x="16" y="112" width="68" height="14" rx="4" fill="#5b2a9d" stroke="#f5c542" stroke-width="3"/><rect x="12" y="104" width="76" height="9" rx="3" fill="#0b1437" stroke="#f5c542" stroke-width="3"/><g class="palu"><path d="M46 95L98 34" stroke="#f5c542" stroke-width="10" stroke-linecap="round"/><path d="M46 95L98 34" stroke="#ffe9a8" stroke-width="5" stroke-linecap="round"/><rect x="24" y="86" width="44" height="18" rx="6" fill="#7b4bd1" stroke="#f5c542" stroke-width="3"/><rect x="32" y="86" width="6" height="18" fill="#f5c542"/><rect x="54" y="86" width="6" height="18" fill="#f5c542"/><circle cx="98" cy="34" r="7" fill="#f5c542" stroke="#0b1437" stroke-width="2"/></g></svg>`;
 const hoot=t=>`<div class="hoot">${owl()}<div class="bubble" id="bub">${t}</div></div>`;
 function lompat(){let o=$('.owl');if(o){o.classList.remove('jump');void o.offsetWidth;o.classList.add('jump')}}
 function say(t){let b=$('#bub');if(b)b.innerHTML=t}
 function tampil(h){app.innerHTML=`<div class="scr">${h}</div>`;window.scrollTo(0,0)}
-const hud=()=>`<div class="hud"><button class="ib" onclick="peta()">🗺️</button><span>🕵️ ${esc(S.nama)}</span><span id="hr">${'❤️'.repeat(Math.max(0,5-R.m))}</span><span id="sk">⭐${S.skor}</span><button class="ib" id="mn" onclick="togMusik()">${musikOn?'🎵':'🔕'}</button><button class="ib" id="sn" onclick="togSuara()">${suara?'🔊':'🔇'}</button></div>`;
+const hud=()=>`<div class="hud"><button class="ib" onclick="peta()">🗺️</button><span>🕵️ ${esc(S.nama)}</span><span id="hr">${'❤️'.repeat(Math.max(0,5-R.m))}</span><span id="sk">⭐${S.skor}</span>${R.ulang?'<span class="kecil">🔁 ulangan: tanpa poin</span>':''}<button class="ib" id="mn" onclick="togMusik()">${musikOn?'🎵':'🔕'}</button><button class="ib" id="sn" onclick="togSuara()">${suara?'🔊':'🔇'}</button></div>`;
 function upHud(){let a=$('#sk'),b=$('#hr');if(a)a.textContent='⭐'+S.skor;if(b)b.textContent='❤️'.repeat(Math.max(0,5-R.m))}
-function tambah(p){S.skor=Math.max(0,S.skor+p);if(p>0)S.xp+=p;upHud();simpan()}
+function tambah(p){if(R.ulang){upHud();return}S.skor=Math.max(0,S.skor+p);if(p>0)S.xp+=p;upHud();simpan()}
 function salah(){R.m++;upHud();sfx.no();let s=$('.scr');if(s){s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake')}}
 function lanjut(fn){$('.scr').insertAdjacentHTML('beforeend','<button class="btn g" id="nx">Lanjut ➜</button>');$('#nx').onclick=fn;$('#nx').scrollIntoView({block:'center'})}
 /* Konfeti ringan */
@@ -261,10 +272,15 @@ function pasangPilihan(){
  })}
 function awal(){
  let P=papan().map((p,i)=>`<li>${i+1}. ${esc(p.n)} — ${p.s} poin</li>`).join('')||'<li>Belum ada. Jadilah yang pertama!</li>';
- tampil(`<div class="noir"><div class="moon"></div><div class="tape"><span>⚠ GARIS POLISI ❘ DILARANG MELINTAS ⚠</span></div><div style="text-align:center"><div class="stamp" style="font-size:1rem;margin:2px">BERKAS RAHASIA</div><div style="letter-spacing:.5em;color:#f5c542;font-size:.8rem;font-weight:800">DETEKTIF</div><div class="neon">DEMOKRASI</div><div style="font-family:Cinzel,Georgia,serif;color:#f5e9b8;letter-spacing:.2em;font-size:.82rem">MISTERI SANTUNLANDIA</div></div>`+hoot('Hoo… malam ini Santunlandia tidak aman. Seseorang menebar kebohongan, dan jejaknya mengarah ke orang paling berkuasa di kota. Beranikah kau menyelidikinya? 🦉')+`<div class="dos"><label>ID DETEKTIF</label><input id="nm" maxlength="20" value="${esc(S.nama)}" placeholder="Ketik namamu…"><label style="display:block;margin-top:10px">KELAS</label><input id="kl" maxlength="10" value="${esc(S.kelas||'')}" placeholder="mis. XI-1"></div><button class="btn g pl" onclick="mulaiGame()">🔦 MULAI PENYELIDIKAN</button><button class="btn" onclick="cara()">📖 Cara Bermain</button><div class="dos"><h3>🏆 Arsip Peringkat</h3><ul>${P}</ul><button class="btn" onclick="peringkat()">🌐 Peringkat Semua Siswa</button></div><button class="btn" onclick="resetAll()">🗑️ Reset Kemajuan</button></div>`);pasangPilihan()}
-function cara(){tampil(hoot('Dengarkan, Detektif!')+`<div class="card"><ul><li>Selesaikan 5 babak berurutan.</li><li>Kumpulkan 4 kunci lewat Babak 1–4 untuk membuka pengadilan Wali Kota Gandara Kuasa.</li><li>Jawab soal analisis; petunjuk Hootie maksimal 2 per soal (mengurangi skor).</li><li>Setiap kesalahan mengurangi ❤️ dan bintang.</li><li>Babak 2: seret kata ke kotak (atau ketuk kata lalu kotak).</li><li>Babak 4: seret kepingan foto ke papan seperti bermain puzzle, lalu jawab satu pertanyaan.</li><li>Bukti terkumpul di Sidang Akhir untuk mengungkap Dalang Hoaks.</li></ul></div><button class="btn g" onclick="awal()">⬅️ Kembali</button>`)}
-function mulaiGame(){let n=$('#nm').value.trim();if(!n){say('Pilih kelas dan namamu dulu ya! 🦉');$('#nm').focus();return}if(n!==S.nama)S=baru(n);S.kelas=($('#kl').value||'').trim();simpan();musikMulai();peta()}
-function resetAll(){if(confirm('Hapus semua kemajuan dan papan peringkat?')){try{localStorage.removeItem('dd_s');localStorage.removeItem('dd_p')}catch(e){}S=baru();awal()}}
+ tampil(`<div class="noir"><div class="moon"></div><div class="tape"><span>⚠ GARIS POLISI ❘ DILARANG MELINTAS ⚠</span></div><div style="text-align:center"><div class="stamp" style="font-size:1rem;margin:2px">BERKAS RAHASIA</div><div style="letter-spacing:.5em;color:#f5c542;font-size:.8rem;font-weight:800">DETEKTIF</div><div class="neon">DEMOKRASI</div><div style="font-family:Cinzel,Georgia,serif;color:#f5e9b8;letter-spacing:.2em;font-size:.82rem">MISTERI SANTUNLANDIA</div></div>`+hoot('Tok! Tok! Sidang dibuka. Malam ini Santunlandia tidak aman. Seseorang menebar kebohongan, dan jejaknya mengarah ke orang paling berkuasa di kota. Beranikah kau menyelidikinya? 🔨')+`<div class="dos"><label>ID DETEKTIF</label><input id="nm" maxlength="20" value="${esc(S.nama)}" placeholder="Ketik namamu…"><label style="display:block;margin-top:10px">KELAS</label><input id="kl" maxlength="10" value="${esc(S.kelas||'')}" placeholder="mis. XI-1"></div><button class="btn g pl" onclick="mulaiGame()">🔦 MULAI PENYELIDIKAN</button><button class="btn" onclick="cara()">📖 Cara Bermain</button><div class="dos"><h3>🏆 Arsip Peringkat</h3><ul>${P}</ul><button class="btn" onclick="peringkat()">🌐 Peringkat Semua Siswa</button></div><button class="btn" onclick="resetAll()">🗑️ Reset Kemajuan</button></div>`);pasangPilihan()}
+function cara(){tampil(hoot('Dengarkan, Detektif!')+`<div class="card"><ul><li>Selesaikan 5 babak berurutan.</li><li>Kumpulkan 4 kunci lewat Babak 1–4 untuk membuka pengadilan Wali Kota Gandara Kuasa.</li><li>Jawab soal analisis; petunjuk Palu Sidang maksimal 2 per soal (mengurangi skor).</li><li>Setiap kesalahan mengurangi ❤️ dan bintang.</li><li>Babak 2: seret kata ke kotak (atau ketuk kata lalu kotak).</li><li>Babak 4: seret kepingan foto ke papan seperti bermain puzzle, lalu jawab satu pertanyaan.</li><li>Bukti terkumpul di Sidang Akhir untuk mengungkap Dalang Hoaks.</li></ul></div><button class="btn g" onclick="awal()">⬅️ Kembali</button>`)}
+function mulaiGame(){let n=$('#nm').value.trim();if(!n){say('Pilih kelas dan namamu dulu ya! 🔨');$('#nm').focus();return}
+ let k=($('#kl').value||'').trim(),c={};S=baru(n);S.kelas=k;
+ try{c=JSON.parse(localStorage.getItem('dd_pc'))||{}}catch(e){}
+ let key=(n+'|'+k).toLowerCase();c[key]=(c[key]||0)+1;try{localStorage.setItem('dd_pc',JSON.stringify(c))}catch(e){}
+ S.p=c[key];S.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+ simpan();musikMulai();peta()}
+function resetAll(){if(confirm('Hapus kemajuan permainan di perangkat ini? Data peringkat tidak ikut terhapus.')){try{localStorage.removeItem('dd_s')}catch(e){}S=baru();awal()}}
 function peta(){R={m:0};
  const NP=[[20,88],[72,70],[25,52],[72,34],[45,12]],K=BANK_SOAL.kunci;
  let now=S.tamat.findIndex(x=>!x);if(now<0)now=4;
@@ -277,7 +293,7 @@ function cerita(i,fn){
  tampil(`<div class="cut"><div class="stamp">KASUS ${i+1}</div><div style="font-size:4rem">${BANK_SOAL.lokasi[i].i}</div><h2>${c.j}</h2><div class="card"><p id="tw" style="text-align:left;min-height:8em"></p></div>${hoot('Dengarkan baik-baik, Detektif…')}<button class="btn g" id="go">🔦 Mulai Penyelidikan</button></div>`);
  let k=0,p=$('#tw'),iv=setInterval(()=>{if(!$('#tw'))return clearInterval(iv);p.textContent=c.t.slice(0,++k);if(k%4==0)bunyi(900,.02,'square');if(k>=c.t.length)clearInterval(iv)},22);
  $('#go').onclick=()=>{clearInterval(iv);fn()}}
-function mulai(i){R={m:0};cerita(i,()=>[b1,b2,b3,b4,b5][i]())}
+function mulai(i){R={m:0,ulang:!!S.tamat[i]};cerita(i,()=>[b1,b2,b3,b4,b5][i]())}
 /* Layar ringkasan, bintang, lencana */
 function selesai(i){
  let b=R.m<=1?3:R.m<=3?2:1;S.bintang[i]=Math.max(S.bintang[i]||0,b);S.tamat[i]=true;if(!S.lencana.includes(i))S.lencana.push(i);
@@ -298,11 +314,11 @@ function mc(L,cb,o={}){
     say('Tepat sekali! 🎉');$('#fb').innerHTML=`<div class="card fb benar">✅ ${q.e}</div>`;$('#hn').remove();lanjut(()=>{i++;t()})}
    else{b.classList.add('salah');b.disabled=true;salah();sl=1;
     if(o.retry)say('Belum tepat. '+q.h[0]);
-    else{sdh=1;document.querySelector(`.opt[data-j="${q.a}"]`).classList.add('benar');say('Hmm, kali ini kurang tepat. Simak penjelasannya ya! 🦉');$('#fb').innerHTML=`<div class="card fb salah">❌ ${q.e}</div>`;$('#hn').remove();lanjut(()=>{i++;t()})}}})
+    else{sdh=1;document.querySelector(`.opt[data-j="${q.a}"]`).classList.add('benar');say('Hmm, kali ini kurang tepat. Simak penjelasannya ya! 🔨');$('#fb').innerHTML=`<div class="card fb salah">❌ ${q.e}</div>`;$('#hn').remove();lanjut(()=>{i++;t()})}}})
  })()}
 
 /* ===== BABAK 1 ===== */
-function b1(){tampil(hud()+hoot('Selamat datang di Ruang Arsip Rahasia! Geser kartu ke kiri dan baca teliti. 🦉')+`<div class="geser">${BANK_SOAL.kartu.map((c,i)=>`<div class="card kt"><div class="ik">${c.i}</div><h3>${c.t}</h3><p>${c.b}</p><small>${i+1}/${BANK_SOAL.kartu.length} • geser ➜</small></div>`).join('')}</div><button class="btn g" onclick="b1q()">🔍 Mulai Pertanyaan Kunci</button>`)}
+function b1(){tampil(hud()+hoot('Selamat datang di Ruang Arsip Rahasia! Geser kartu ke kiri dan baca teliti. 🔨')+`<div class="geser">${BANK_SOAL.kartu.map((c,i)=>`<div class="card kt"><div class="ik">${c.i}</div><h3>${c.t}</h3><p>${c.b}</p><small>${i+1}/${BANK_SOAL.kartu.length} • geser ➜</small></div>`).join('')}</div><button class="btn g" onclick="b1q()">🔍 Mulai Pertanyaan Kunci</button>`)}
 function b1q(){R.m=0;mc(acak(BANK_SOAL.b1),ok=>{if(ok>=4)selesai(0);else{tampil(hud()+hoot('Baru '+ok+' gembok terbuka. Butuh minimal 4. Baca ulang materinya ya!')+`<button class="btn g" onclick="b1()">📚 Baca Ulang Materi</button>`)}},{ikon:'🔐',lock:1})}
 
 /* ===== Seret & lepas (pointer events, aman untuk sentuhan) ===== */
@@ -412,22 +428,53 @@ function final(){
  tampil(hoot('Hadirin harap tenang… Hakim akan membacakan putusan.')+`<div class="card" style="text-align:center"><div class="gav">🔨</div><h2 id="rv">⚖️ Sidang sedang berlangsung…</h2></div><div id="ct"></div>`);
  let n=0,iv=setInterval(()=>{bunyi(140,.15,'square');if(++n>=3)clearInterval(iv)},700);
  setTimeout(()=>{let r=$('#rv');if(!r)return;r.innerHTML='<div class="stamp">BERSALAH</div><p style="font-size:.95rem">Wali Kota Gandara Kuasa terbukti memerintahkan penyebaran hoaks dan membungkam kebebasan berpendapat (Pasal 28E, 28F, 28J), serta mengabaikan musyawarah dan tanggung jawab.</p>';sfx.win();konfeti();lompat();say('Kasus terpecahkan! Demokrasi Santunlandia selamat berkat kamu! 🎉');
-  kirim({nama:S.nama,kelas:S.kelas||'',skor:S.skor,bintang:tot});let P=papan();P.push({n:S.nama,s:S.skor});P.sort((a,b)=>b.s-a.s);try{localStorage.setItem('dd_p',JSON.stringify(P.slice(0,5)))}catch(e){}
+  catatHasil(tot);
   $('#ct').innerHTML=`<div class="card sert"><h3>🏅 SERTIFIKAT DIGITAL</h3><p>Diberikan kepada</p><h2>${esc(S.nama)}</h2><p>sebagai</p><h3>DETEKTIF DEMOKRASI</h3><p>yang berhasil menuntaskan Kasus Wali Kota Gandara Kuasa<br>Skor: <b>${S.skor}</b> • XP: ${S.xp}<br>Bintang: ${tot}/15 ${'⭐'.repeat(Math.round(tot/5))}<br>${tg}</p><div class="badge">${S.lencana.map(i=>BANK_SOAL.lencana[i]).join(' ')}</div></div><button class="btn g" onclick="window.print()">🖨️ Cetak / Simpan PDF</button><button class="btn wa" onclick="kirimWA()">📲 Kirim Foto Sertifikat ke WhatsApp Inspektur</button><button class="btn" onclick="peta()">🗺️ Kembali ke Peta</button>`},2600)}
 
 /* ===== Papan peringkat ONLINE (Google Apps Script + Google Sheets) ===== */
+const PIN_GURU="1234"; // PIN guru untuk menghapus data peringkat. GANTI sebelum dibagikan ke siswa.
 const PERINGKAT_URL=""; // TEMPEL URL Web App Apps Script di antara tanda kutip. Kosong = peringkat hanya di perangkat ini.
 function antre(){try{return JSON.parse(localStorage.getItem('dd_q'))||[]}catch(e){return[]}}
 function simAntre(a){try{localStorage.setItem('dd_q',JSON.stringify(a))}catch(e){}}
 /* Kirim skor siswa yang tamat; bila offline, simpan di antrean dan kirim ulang saat online */
 function kirim(d){if(!PERINGKAT_URL)return;fetch(PERINGKAT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).catch(()=>{let a=antre();a.push(d);simAntre(a)})}
 function kirimAntrean(){let a=antre();if(!a.length||!PERINGKAT_URL||!navigator.onLine)return;simAntre([]);a.forEach(kirim)}
+function catatHasil(tot){
+ let r={id:S.id||('x'+Date.now().toString(36)),nama:S.nama,kelas:S.kelas||'',skor:S.skor,bintang:tot,p:S.p||1,t:new Date().toISOString()};
+ let a=rekam().filter(x=>x.id!==r.id);a.push(r);simRekam(a);kirim(r)}
+let GURU_ON=false,FK_RANK='',PIN_IN='';
 function peringkat(){
- tampil(hud()+hoot('Inilah para detektif terbaik Santunlandia! 🏆')+`<div class="card"><h3>🌐 Peringkat Semua Siswa</h3><div id="pr">⏳ Memuat…</div></div><button class="btn g" onclick="${S.nama?'peta()':'awal()'}">⬅️ Kembali</button>`);
- const tulis=(L,ket)=>{$('#pr').innerHTML=(ket||'')+(L.length?`<ol style="padding-left:22px">${L.map((p,i)=>`<li${p.nama==S.nama?' style="color:var(--g);font-weight:800"':''}>${['🥇','🥈','🥉'][i]||''} ${esc(p.nama)}${p.kelas?' ('+esc(p.kelas)+')':''} — ${p.skor} poin</li>`).join('')}</ol>`:'<p>Belum ada data.</p>')};
- const lokal=()=>papan().map(p=>({nama:p.n,skor:p.s}));
- if(!PERINGKAT_URL)return tulis(lokal(),'<p class="kecil">Mode offline: peringkat di perangkat ini saja.</p>');
- fetch(PERINGKAT_URL).then(r=>r.json()).then(d=>tulis(d.slice(0,30))).catch(()=>tulis(lokal(),'<p class="kecil">Tidak dapat terhubung ke internet. Menampilkan peringkat di perangkat ini.</p>'))}
+ GURU_ON=false;PIN_IN='';
+ let D=[],mode='';
+ tampil(hud()+hoot('Inilah para detektif terbaik Santunlandia! 🏆')+`<div class="card"><h3>🌐 Peringkat Semua Siswa</h3><label class="kecil">Tampilkan kelas</label><select id="fk"></select><div id="pr" style="margin-top:8px">⏳ Memuat…</div><div id="gr" style="margin-top:8px"></div></div><button class="btn g" onclick="${S.nama?'peta()':'awal()'}">⬅️ Kembali</button>`);
+ const urut=a=>a.slice().sort((x,y)=>y.skor-x.skor||String(x.t||'').localeCompare(String(y.t||'')));
+ const cocok=(r,f)=>f.id?r.id===f.id:f.kelas?r.kelas===f.kelas:true;
+ const hapus=(f,msg)=>{
+  if(!confirm(msg))return;
+  if(PERINGKAT_URL)fetch(PERINGKAT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({aksi:'hapus',pin:PIN_IN},f))}).catch(()=>{});
+  simRekam(rekam().filter(r=>!cocok(r,f)));D=D.filter(r=>!cocok(r,f));gambar();say('Data dihapus. 🗑️')};
+ const unduh=()=>{
+  const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const L=urut(D.filter(r=>!FK_RANK||r.kelas===FK_RANK));
+  const t='\ufeff'+['Kelas,Nama,Skor,Bintang,Percobaan,Waktu'].concat(L.map(r=>[r.kelas,r.nama,r.skor,r.bintang,r.p||1,r.t||''].map(c).join(','))).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));
+  a.download='peringkat-detektif-demokrasi'+(FK_RANK?'-'+FK_RANK:'')+'.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+ function gambar(){
+  const KLS=[...new Set(D.map(r=>r.kelas).concat((DB_SISWA||[]).map(s=>s.kelas)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id',{numeric:true}));
+  const fs=$('#fk');fs.replaceChildren(new Option('Semua kelas',''));KLS.forEach(k=>fs.append(new Option(k,k)));
+  fs.value=KLS.includes(FK_RANK)?FK_RANK:'';FK_RANK=fs.value;
+  const L=urut(D.filter(r=>!FK_RANK||r.kelas===FK_RANK)).slice(0,50);
+  $('#pr').innerHTML=(mode?`<p class="kecil">${mode}</p>`:'')+(L.length?`<ol style="padding-left:22px">${L.map((p,i)=>`<li${p.id&&p.id===S.id?' style="color:var(--g);font-weight:800"':''}>${['🥇','🥈','🥉'][i]||''} ${esc(p.nama)}${p.kelas?' ('+esc(p.kelas)+')':''} — ${p.skor} poin${p.p>1?' · percobaan ke-'+p.p:''}${GURU_ON&&p.id?` <button class="ib" data-h="${esc(p.id)}" style="min-height:32px;padding:2px 8px">🗑️</button>`:''}</li>`).join('')}</ol>`:'<p>Belum ada data.</p>');
+  $('#gr').innerHTML=GURU_ON?`<button class="btn" id="csv">💾 Unduh data (CSV)</button><button class="btn" id="hk">🗑️ Hapus data ${FK_RANK?'kelas '+esc(FK_RANK):'semua kelas'}</button><button class="btn" id="kg">🔓 Keluar mode guru</button>`:`<button class="btn" id="mg">🔐 Mode Guru</button>`;
+  document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>hapus({id:b.dataset.h},'Hapus nilai ini?'));
+  if($('#csv'))$('#csv').onclick=unduh;
+  if($('#hk'))$('#hk').onclick=()=>hapus(FK_RANK?{kelas:FK_RANK}:{semua:1},FK_RANK?'Hapus SEMUA data kelas '+FK_RANK+'?':'Hapus SEMUA data peringkat?');
+  if($('#kg'))$('#kg').onclick=()=>{GURU_ON=false;PIN_IN='';gambar()};
+  if($('#mg'))$('#mg').onclick=()=>{let x=prompt('Masukkan PIN guru:');if(x===null)return;if(x===PIN_GURU){GURU_ON=true;PIN_IN=x;gambar()}else say('PIN salah. 🔒')}}
+ $('#fk').onchange=e=>{FK_RANK=e.target.value;gambar()};
+ muatSiswa().then(()=>{
+  if(!PERINGKAT_URL){mode='Data tersimpan di perangkat ini saja.';D=rekam();return gambar()}
+  fetch(PERINGKAT_URL).then(r=>r.json()).then(d=>{D=Array.isArray(d)?d:[];gambar()}).catch(()=>{D=rekam();mode='Tidak dapat terhubung ke internet. Menampilkan data di perangkat ini.';gambar()})})}
 
 /* ===== Kirim FOTO sertifikat ke WhatsApp Inspektur (guru) ===== */
 const NOMOR_WA_INSPEKTUR=""; // ISI nomor WhatsApp guru, contoh "6281234567890" (dipakai untuk cadangan teks). Kosong = siswa memilih kontak sendiri.
