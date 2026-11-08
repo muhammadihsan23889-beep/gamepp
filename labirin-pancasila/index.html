@@ -414,6 +414,18 @@ const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sampleDB=()=>{const o={};['XII-1','XII-2','XII-3'].forEach(c=>{o[c]=Array.from({length:8},(_,i)=>'Siswa Contoh '+String(i+1).padStart(2,'0'))});return o};
 let DBS=lsGet(LSK.db,null)||sampleDB(),pName='',pClass='',pRobot=0,inLobby=true,LS,lcam,lrobots=[],lsel=0,lrot=0,lpop=0,ldrag=0,lring,lglow,lpart,lrimA,lrimB,lbeam,lsymM,lpos,resTxt='',winHTML='';
+/* Sambungan ke database siswa portal: baca ../siswa.json; jika tidak ada, pakai data portal yang tersimpan di perangkat ini (siswa_db). Jika keduanya kosong, data lama/contoh tetap dipakai. */
+(function(){
+ const pakai=L=>{
+  if(!L||!L.length)return false;
+  const o={};L.forEach(x=>{(o[x.kelas]=o[x.kelas]||[]).push(x.nama)});
+  for(const k in o)o[k].sort((a,b)=>a.localeCompare(b,'id'));
+  DBS=o;lsSet(LSK.db,o);
+  if(pClass&&pClass!=='Tamu'&&!o[pClass]){pName='';pClass=''}
+  renderClasses();renderNames();updSel();return true};
+ fetch('../siswa.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{if(!pakai(d.siswa))throw 0})
+  .catch(()=>{try{const d=JSON.parse(localStorage.getItem('siswa_db'));pakai(d&&d.siswa)}catch(e){}});
+})();
 // ===== ROBOT REALISTIS (desain orisinal Pancasila) =====
 let ENVT=null;
 function getEnv(){if(ENVT)return ENVT;
