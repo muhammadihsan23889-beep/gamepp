@@ -410,6 +410,8 @@ const RB=[
 {n:'PADI & KAPAS',sila:'Sila 5 · Keadilan Sosial bagi Seluruh Rakyat Indonesia',nilai:'Keadilan & kesejahteraan',desc:'Robot pembawa kemakmuran berjambul padi dan berbahu kapas. Adil, dermawan, dan penuh syukur.',main:0xf1e6c4,sec:0xe0b030,dark:0x4a3a1c,glow:0xffe27a,css:'#ffd86a'}];
 const CARN=['Coupe emas','Ambulans kemanusiaan','Jip hutan beringin','Truk banteng perkasa','Pickup pembawa padi & kapas'];
 const LSK={db:'pancasila_db_v1',lb:'pancasila_lb_v1',sel:'pancasila_sel_v1'};
+const PIN_GURU='1234'; // PIN guru untuk menghapus peringkat. GANTI sebelum dibagikan ke siswa.
+const PERINGKAT_URL=''; // TEMPEL URL Web App Apps Script di antara tanda kutip. Kosong = peringkat hanya di perangkat ini.
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sampleDB=()=>{const o={};['XII-1','XII-2','XII-3'].forEach(c=>{o[c]=Array.from({length:8},(_,i)=>'Siswa Contoh '+String(i+1).padStart(2,'0'))});return o};
@@ -577,9 +579,31 @@ function parseDB(txt){const o={};txt.split(/\r?\n/).forEach(l=>{const m=l.match(
 function dbEdit(){dlg('⚙ Database Siswa','<p style="font-size:12.5px;margin:0 0 6px">Satu siswa per baris dengan format <b>Kelas;Nama</b> (boleh tempel dari Excel: pemisah titik koma, koma, atau tab). Data disimpan di perangkat ini.</p><input type="file" id="dbf" accept=".csv,.txt" style="font-size:12px;margin-bottom:6px"><textarea id="dbta" style="width:100%;height:190px;box-sizing:border-box;border-radius:8px;padding:8px;font-size:13px"></textarea>',[['💾 Simpan',()=>{const o=parseDB($('dbta').value);if(!Object.keys(o).length){toast('Data kosong, tidak disimpan',2);return}DBS=o;lsSet(LSK.db,o);pName='';pClass='';renderClasses();renderNames();updSel()}],['↺ Reset ke Contoh',()=>{DBS=sampleDB();lsSet(LSK.db,DBS);pName='';pClass='';renderClasses();renderNames();updSel()}],['Batal']]);
 $('dbta').value=Object.entries(DBS).flatMap(([c,a])=>a.map(n=>c+';'+n)).join('\n');$('dbf').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('dbta').value=r.result};r.readAsText(f)}}
 // peringkat
-function showLB(back){const lb=lsGet(LSK.lb,[]).slice().sort((a,b)=>b.s-a.s||a.t-b.t).slice(0,15);
-dlg('🏆 Papan Peringkat',lb.length?'<table style="width:100%;font-size:12.5px;border-collapse:collapse"><tr style="color:#f5c542"><th align=left>#</th><th align=left>Nama</th><th align=left>Kelas</th><th>Skor</th><th>Waktu</th></tr>'+lb.map((r,i)=>'<tr style="border-top:1px solid #ffffff22"><td>'+(i+1)+'</td><td>'+esc(r.n)+'</td><td>'+esc(r.c)+'</td><td align=center><b>'+r.s+'</b></td><td align=center>'+Math.floor(r.t/60)+':'+String(r.t%60).padStart(2,'0')+'</td></tr>').join('')+'</table>':'<p>Belum ada yang menyelesaikan misi.</p>',
-[['📋 Salin CSV',()=>{copyText('Nama;Kelas;Karakter;Skor;Waktu(detik);Soal benar;Salah;Tanggal\n'+lsGet(LSK.lb,[]).map(r=>[r.n,r.c,r.r,r.s,r.t,r.ok,r.w,r.d].join(';')).join('\n'));showLB(back)}],['🗑 Hapus Semua',()=>{if(confirm('Hapus semua peringkat?')){lsSet(LSK.lb,[])}showLB(back)}],['Tutup',back]])}
+function kirimOnline(r){if(!PERINGKAT_URL)return;try{fetch(PERINGKAT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({game:'labirin',id:r.id,nama:r.n,kelas:r.c,skor:r.s,waktu:r.t,benar:r.ok,salah:r.w,robot:r.r,t:new Date().toISOString()})}).catch(()=>{})}catch(e){}}
+function ambilLB(){const loc=lsGet(LSK.lb,[]);if(!PERINGKAT_URL)return Promise.resolve({a:loc,note:''});
+return fetch(PERINGKAT_URL+(PERINGKAT_URL.includes('?')?'&':'?')+'game=labirin',{cache:'no-store'}).then(r=>r.json()).then(a=>{
+const net=(Array.isArray(a)?a:[]).map(x=>({id:x.id,n:x.nama,c:x.kelas,s:+x.skor,t:+x.waktu,ok:+x.benar,w:+x.salah,r:x.robot,d:x.t?new Date(x.t).toLocaleDateString('id-ID'):''}));
+const ids=new Set(net.map(x=>x.id));loc.filter(x=>!x.id||!ids.has(x.id)).forEach(x=>net.push(x));return{a:net,note:''}})
+.catch(()=>({a:loc,note:'Tidak dapat terhubung ke internet. Menampilkan data di perangkat ini.'}))}
+function showLB(back,kf){if(!PERINGKAT_URL){drawLB(back,kf||'',lsGet(LSK.lb,[]),'');return}
+dlg('🏆 Papan Peringkat','<p>⏳ Memuat peringkat…</p>',[['Tutup',back]]);
+ambilLB().then(x=>drawLB(back,kf||'',x.a,x.note))}
+function hapusLB(back,kf,all){const p=prompt('Masukkan PIN guru untuk menghapus'+(kf?' data kelas '+kf:' SEMUA data')+':');
+if(p===null){drawLB(back,kf,all,'');return}
+if(p!==PIN_GURU){toast('PIN salah 🔒',2);drawLB(back,kf,all,'');return}
+if(!confirm(kf?'Hapus semua hasil kelas '+kf+'?':'Hapus SEMUA peringkat?')){drawLB(back,kf,all,'');return}
+lsSet(LSK.lb,lsGet(LSK.lb,[]).filter(r=>kf&&r.c!==kf));
+if(PERINGKAT_URL)fetch(PERINGKAT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({game:'labirin',aksi:'hapus',pin:p},kf?{kelas:kf}:{semua:1}))}).catch(()=>{});
+toast('Data dihapus 🗑',2);setTimeout(()=>showLB(back,kf),PERINGKAT_URL?1500:0)}
+function drawLB(back,kf,all,note){
+const ks=[...new Set(all.map(r=>r.c).concat(Object.keys(DBS||{})).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id',{numeric:true}));
+const rows=all.filter(r=>!kf||r.c===kf).sort((a,b)=>b.s-a.s||a.t-b.t);
+const lb=rows.slice(0,50);
+const sel='<div style="margin-bottom:8px">Tampilkan: <select id="lbK" style="font:inherit;padding:4px 8px;border-radius:8px"><option value="">Semua kelas</option>'+ks.map(k=>'<option value="'+esc(k)+'"'+(k===kf?' selected':'')+'>'+esc(k)+'</option>').join('')+'</select> <span style="opacity:.7">('+rows.length+' hasil)</span>'+(note?'<div style="color:#ffb86b;font-size:12px;margin-top:4px">'+esc(note)+'</div>':'')+'</div>';
+const tbl=lb.length?'<div style="max-height:46vh;overflow:auto"><table style="width:100%;font-size:12.5px;border-collapse:collapse"><tr style="color:#f5c542"><th align=left>#</th><th align=left>Nama</th><th align=left>Kelas</th><th>Skor</th><th>Waktu</th></tr>'+lb.map((r,i)=>'<tr style="border-top:1px solid #ffffff22"><td>'+(['🥇','🥈','🥉'][i]||(i+1))+'</td><td>'+esc(r.n)+'</td><td>'+esc(r.c)+'</td><td align=center><b>'+r.s+'</b></td><td align=center>'+Math.floor(r.t/60)+':'+String(r.t%60).padStart(2,'0')+'</td></tr>').join('')+'</table></div>':'<p>'+(kf?'Belum ada hasil untuk kelas '+esc(kf)+'.':'Belum ada yang menyelesaikan misi.')+'</p>';
+dlg('🏆 Papan Peringkat'+(kf?' · '+kf:''),sel+tbl,
+[['📋 Salin CSV',()=>{copyText('Nama;Kelas;Karakter;Skor;Waktu(detik);Soal benar;Salah;Tanggal\n'+rows.map(r=>[r.n,r.c,r.r,r.s,r.t,r.ok,r.w,r.d].join(';')).join('\n'));drawLB(back,kf,all,note)}],['🗑 Hapus'+(kf?' '+kf:' Semua'),()=>hapusLB(back,kf,all)],['Tutup',back]]);
+const e=$('lbK');if(e)e.onchange=()=>drawLB(back,e.value,all,note)}
 function copyText(t){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();toast('📋 Disalin ke clipboard',2)}
 function initLobby(){document.body.classList.add('lob');initLobbyScene();$('lg').src=IMG;
 $('cards').innerHTML=RB.map((d,i)=>'<div class="cd" data-k="'+i+'"><img src="'+SYM[i].toDataURL()+'"><span>'+d.n.replace(' & ','<br>& ')+'</span></div>').join('');
@@ -685,7 +709,7 @@ if(T.every((v,i)=>v==i)){close();openGate();return}if(mv>=max){close();jail('Tek
 draw()}
 function openGate(){sfx(1);opening=1;setTimeout(win,2200)}
 function win(){finished=true;buzz(false);const bonus=Math.max(0,Math.min(60,Math.round((1500-secs)/20))),pz=30;score+=bonus+pz;ui();const r=score>=170?'🏆 Agent of Change sejati!':score>=120?'🥇 Hebat!':'🥈 Bagus! Coba lagi untuk skor lebih tinggi.';
-const res={n:pName,c:pClass,r:RB[pRobot].n,s:score,t:Math.floor(secs),ok:tot,w:wrongN,d:new Date().toLocaleDateString('id-ID')};const lb=lsGet(LSK.lb,[]);lb.push(res);lsSet(LSK.lb,lb.slice(-300));
+const res={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:pName,c:pClass,r:RB[pRobot].n,s:score,t:Math.floor(secs),ok:tot,w:wrongN,d:new Date().toLocaleDateString('id-ID')};const lb=lsGet(LSK.lb,[]);lb.push(res);lsSet(LSK.lb,lb.slice(-300));kirimOnline(res);
 resTxt='Rumah Pancasila - '+pName+' ('+pClass+') robot '+RB[pRobot].n+': skor '+score+', soal benar '+tot+'/15, salah '+wrongN+', waktu '+Math.floor(secs)+' detik';
 winHTML='<p style="color:#ffd34d;font-weight:900;font-size:18px">🚪 Gerbang GARUDA terbuka — kamu berhasil keluar dari labirin rumah!</p><p><b>'+esc(pName)+'</b> ('+esc(pClass)+') · Robot '+RB[pRobot].n+'<br>Kamu lolos dari rumah itu! Pancasila adalah cahaya pembangunan bangsa!</p><p>Soal benar: '+tot+'/15<br>Kesalahan: '+wrongN+'<br>Bonus puzzle: '+pz+'<br>Bonus waktu: '+bonus+'<br><b>Skor akhir: '+score+'</b><br>Waktu: '+Math.floor(secs)+' dtk</p><p>'+r+'</p>';showWin();setTimeout(showCert,1200)}
 function certCanvas(){const W=1600,H=1130,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
