@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Papan Refleksi</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:linear-gradient(160deg,#a8e0ff,#e6f6ff 55%,#fff1c9);--ink:#1d3557;--panel:rgba(255,255,255,.65);--acc:#3a86ff;--accink:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:linear-gradient(160deg,#14103a,#1d2b5a);--ink:#f2f2ff;--panel:rgba(255,255,255,.12)}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--bg);background-attachment:fixed;background-color:#bfe6ff;transition:color .3s}
+body.kertas{background-image:repeating-linear-gradient(transparent 0 31px,#cfe3ff 31px 32px),linear-gradient(90deg,transparent 58px,#ffb3b3 58px 60px,transparent 60px)}
+#deco{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+#deco span{position:absolute;bottom:-60px;opacity:.55;animation:up linear infinite}
+@keyframes up{to{transform:translateY(-115vh) rotate(40deg)}}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:18px 16px 110px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{font-weight:700;font-size:1.4rem;margin-right:6px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:6px 2px;flex:1;scrollbar-width:none}
+.tab,.btn{font:inherit;border:0;cursor:pointer;color:var(--ink);background:var(--panel);backdrop-filter:blur(8px);padding:9px 16px;border-radius:999px;font-weight:500;white-space:nowrap;transition:transform .15s,box-shadow .15s;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.tab:hover,.btn:hover{transform:translateY(-2px)}
+.tab small{opacity:.7;margin-left:4px}
+.tab.on{background:var(--acc);color:var(--accink);box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.btn.add{background:var(--acc);color:var(--accink);font-weight:700}
+.banner{margin:22px 0 26px;padding:26px;border-radius:28px;background:var(--panel);backdrop-filter:blur(10px);box-shadow:0 8px 30px rgba(0,0,0,.12);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.banner h1{margin:0;flex:1;min-width:220px;font-size:clamp(1.4rem,4.5vw,2.4rem);line-height:1.2}
+.banner .lbl{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.grid{columns:250px;column-gap:20px}
+.card{break-inside:avoid;margin:0 0 20px;padding:18px;border-radius:22px;color:#2b2540;box-shadow:0 8px 20px rgba(0,0,0,.18);position:relative;transform:rotate(var(--r));transition:transform .2s}
+.card:hover{transform:rotate(0) translateY(-4px) scale(1.02)}
+.card.pop{animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.2) rotate(-20deg);opacity:0}}
+.card .em{font-size:2.6rem;line-height:1}
+.card p{margin:10px 0 14px;font-size:1.05rem;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.card .by{font-size:.85rem;font-weight:600;opacity:.7}
+.rx{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.rx button{font:inherit;font-size:.9rem;border:0;background:rgba(255,255,255,.65);border-radius:999px;padding:4px 10px;cursor:pointer}
+.rx button:active{transform:scale(1.3)}
+.del{position:absolute;top:8px;right:8px;border:0;background:rgba(255,255,255,.6);border-radius:50%;width:28px;height:28px;cursor:pointer;opacity:.5;font-size:.8rem}
+.del:hover{opacity:1}.del.sure{background:#ff4d6d;color:#fff;opacity:1;width:auto;border-radius:999px;padding:0 10px}
+.empty{text-align:center;padding:60px 10px;font-size:1.2rem;opacity:.85}
+.empty b{display:block;font-size:4rem}
+.fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:5;width:68px;height:68px;border-radius:50%;border:0;font-size:2.2rem;font-weight:700;background:var(--acc);color:var(--accink);cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);transition:transform .2s}
+.fab:hover{transform:scale(1.1) rotate(90deg)}
+.ov{position:fixed;inset:0;z-index:20;background:rgba(15,10,40,.55);display:flex;align-items:center;justify-content:center;padding:14px;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.modal{background:#fff;color:#2b2540;width:min(520px,100%);max-height:92vh;overflow:auto;border-radius:28px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+.modal h2{margin:0 0 14px}
+.modal label{display:block;font-weight:600;margin:14px 0 6px;font-size:.9rem}
+.modal input,.modal textarea{width:100%;font:inherit;padding:11px 14px;border:2px solid #e3dff2;border-radius:14px;background:#faf9ff;color:#2b2540}
+.modal input:focus,.modal textarea:focus{outline:0;border-color:#7c5cff}
+.modal textarea{min-height:96px;resize:vertical}
+.emg{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.emg button,.sw button{border:2px solid transparent;background:#f3f0ff;border-radius:12px;font-size:1.5rem;padding:4px 0;cursor:pointer}
+.emg button.on{border-color:#7c5cff;background:#e6deff;transform:scale(1.15)}
+.sw{display:flex;gap:10px;flex-wrap:wrap}
+.sw button{width:38px;height:38px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #d9d4ec}
+.sw button.on{box-shadow:0 0 0 3px #7c5cff;transform:scale(1.15)}
+.foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.foot button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:11px 22px;cursor:pointer;background:#eee9fb;color:#2b2540}
+.foot .go{background:#7c5cff;color:#fff}.foot .red{background:#ffe0e6;color:#c0143c;margin-right:auto}
+.thg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.thg button{border:3px solid transparent;border-radius:18px;height:84px;cursor:pointer;font:inherit;font-weight:600;font-size:.95rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.thg button span{font-size:1.6rem}
+.thg button.on{border-color:#7c5cff;transform:scale(1.05)}
+.conf{position:fixed;z-index:30;pointer-events:none;font-size:1.8rem;animation:cf 1.2s ease-out forwards}
+@keyframes cf{to{transform:translate(var(--x),var(--y)) rotate(360deg);opacity:0}}
+@media(max-width:560px){.emg{grid-template-columns:repeat(6,1fr)}}
+.toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:#2b2540;color:#fff;padding:10px 18px;border-radius:999px;font-size:.9rem;box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:90vw;text-align:center}
+.pick{display:flex;gap:8px;flex:1;min-width:220px;align-items:center}
+.sel{font:inherit;font-weight:600;flex:1;min-width:0;max-width:420px;border:0;cursor:pointer;color:var(--ink);background:var(--panel);backdrop-filter:blur(8px);padding:10px 16px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.sel option{color:#2b2540;background:#fff}
+.cp{font:inherit;font-weight:600;border:0;border-radius:999px;padding:0 18px;background:#7c5cff;color:#fff;cursor:pointer;white-space:nowrap}
+body.siswa .acts,body.siswa .del,body.siswa #newTab,body.siswa.tetap .pick{display:none}
+.logo{line-height:1.15}
+.teacher{display:block;font-size:.85rem;font-weight:500;opacity:.8;margin:2px 0 0 34px}
+</style>
+</head>
+<body>
+<div id="deco"></div>
+<div class="wrap">
+  <div class="top"><div class="logo">📌 Papan Refleksi<span class="teacher">Muhammad Ihsan, S. Pd. Gr</span></div><div class="pick"><select id="sel" class="sel" aria-label="Pilih papan"></select><button class="btn add" id="newTab">＋ Papan</button></div></div>
+  <div class="banner"><div style="flex:1;min-width:220px"><div class="lbl">Pertanyaan refleksi</div><h1 id="q"></h1></div>
+    <div class="acts"><button class="btn" id="bQR">📱 QR</button><button class="btn" id="bLink">🔗 Link siswa</button><button class="btn" id="bTheme">🎨 Tema</button><button class="btn" id="bSet">⚙️ Atur papan</button></div></div>
+  <div class="grid" id="grid"></div>
+</div>
+<button class="fab" id="fab" title="Tambah jawaban">+</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+const K='papan-refleksi-v1';
+const THEMES=[
+{id:'langit',n:'Langit Ceria',i:'☁️',bg:'linear-gradient(160deg,#a8e0ff,#e6f6ff 55%,#fff1c9)',ink:'#1d3557',panel:'rgba(255,255,255,.65)',acc:'#3a86ff',ai:'#fff',d:'☁️🎈⭐🕊️'},
+{id:'senja',n:'Senja',i:'🌅',bg:'linear-gradient(160deg,#ff9a76,#ff6b9d 50%,#6a4c93)',ink:'#fff',panel:'rgba(255,255,255,.2)',acc:'#ffd166',ai:'#3d2a00',d:'🌅🕊️✨🌴'},
+{id:'hutan',n:'Hutan',i:'🌿',bg:'linear-gradient(160deg,#c7f0b8,#7fcf8e 55%,#2f9e6e)',ink:'#12372a',panel:'rgba(255,255,255,.55)',acc:'#1b7a4b',ai:'#fff',d:'🌿🦋🍃🐞'},
+{id:'galaksi',n:'Galaksi',i:'🪐',bg:'radial-gradient(circle at 20% 10%,#4b2a8f,#14103a 60%,#07061a)',ink:'#fff',panel:'rgba(255,255,255,.12)',acc:'#b388ff',ai:'#1a0a40',d:'⭐🪐🌙🚀'},
+{id:'permen',n:'Permen',i:'🍭',bg:'linear-gradient(160deg,#ffd6e8,#fff0f7 50%,#d6f5ff)',ink:'#7a1f5c',panel:'rgba(255,255,255,.7)',acc:'#ff5fa2',ai:'#fff',d:'🍭🍬🧁🍩'},
+{id:'samudra',n:'Samudra',i:'🐠',bg:'linear-gradient(180deg,#7ee0ff,#1e90d6 60%,#0b3d91)',ink:'#fff',panel:'rgba(255,255,255,.2)',acc:'#ffe066',ai:'#3d2f00',d:'🐠🐳🫧🐙'},
+{id:'sakura',n:'Sakura',i:'🌸',bg:'linear-gradient(160deg,#fff0f3,#ffd9e2 60%,#f7b6c8)',ink:'#6b2740',panel:'rgba(255,255,255,.65)',acc:'#e75480',ai:'#fff',d:'🌸🌺🎀🦋'},
+{id:'neon',n:'Neon Gamer',i:'👾',bg:'linear-gradient(160deg,#0d0d1a,#1a0b2e 60%,#091a3a)',ink:'#f2f2ff',panel:'rgba(255,255,255,.08)',acc:'#00f5d4',ai:'#04121a',d:'⚡💜🎮👾'},
+{id:'kertas',n:'Buku Tulis',i:'✏️',bg:'#fffdf5',ink:'#3b3b58',panel:'rgba(255,255,255,.85)',acc:'#ff7a45',ai:'#fff',d:'✏️📚📝🎒'}];
+const COLORS=['#FFF3A3','#FFC9DE','#C6F1D6','#BDE3FF','#E4D4FF','#FFD8B0','#FFFFFF'];
+const EMOS=['😀','😍','🤩','😎','🥳','😊','🤔','😅','😴','😢','😡','🤯','💡','🔥','🌟','💪','🎯','📚','🏆','🚀','❤️','👍','🙌','🙏','🍀','🎉','🧠','✨','🦄','🐱','🐶'];
+const RX=['❤️','👍','😂','🌟'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+// === PENGATURAN PENYIMPANAN ===
+// Isi scriptUrl dengan URL aplikasi web Google Apps Script (berakhiran /exec) agar semua jawaban
+// tersimpan di Google Sheets dan terlihat oleh semua siswa.
+// Jika dikosongkan, aplikasi berjalan mode demo (tersimpan hanya di perangkat ini).
+const CONFIG={scriptUrl:''};
+const base=CONFIG.scriptUrl.replace(/\/$/,''),REMOTE=!!base;
+let PINK='';
+let S={name:'',boards:[]},AID=null,last='',hold=0;
+try{const l=JSON.parse(localStorage.getItem(K)||'{}');S.name=l.name||'';AID=l.aid||null;if(!REMOTE&&l.boards)S.boards=l.boards}catch(e){}
+const H=()=>decodeURIComponent(location.hash.slice(1));
+/* Tampilan guru: alamat berakhiran #guru. Selain itu = tampilan siswa:
+   tanpa kode -> siswa memilih papan sendiri (dipakai kartu portal); #kodepapan -> terkunci ke satu papan. */
+let GURU=H()==='guru',SISWA=!GURU,HID=(!GURU&&H())?H():'';if(HID)AID=HID;
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(REMOTE?{name:S.name,aid:AID}:{name:S.name,aid:AID,boards:S.boards}))}catch(e){}};
+let ST={t:'Memuat…',q:'Memuat papan…',d:'Sedang memuat papan…'};
+const cur=()=>S.boards.find(b=>b.id===AID)||(SISWA?S.boards[S.boards.length-1]:S.boards[0])||{id:'',title:ST.t,q:ST.q,theme:'langit',cards:[]};
+async function api(m,p,b){
+ if(m==='GET'){const mm=p.match(/^\/boards\/([^/]+)$/);const r=await fetch(base+'?aksi=ambil'+(mm?'&papan='+encodeURIComponent(mm[1]):''),{cache:'no-store'});if(!r.ok)throw 0;return r.json()}
+ const r=await fetch(base,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({m,p,b:b===undefined?null:b,pin:PINK})});
+ if(!r.ok)throw 0;const j=await r.json();if(j&&j.ok===false)throw j;return j}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3200)}
+const perluPin=(m,p)=>/^\/boards\/[^/]+$/.test(p)||(m==='DELETE'&&/\/cards\/[^/]+$/.test(p));
+const sync=(m,p,b)=>{save();if(!REMOTE)return;
+ if(perluPin(m,p)){
+  if(SISWA){toast('Hanya guru yang bisa melakukan ini');load();return}
+  if(!PINK){const x=prompt('Masukkan PIN guru:');if(x===null){toast('Dibatalkan');hold=0;load();return}PINK=x}}
+ hold=Date.now()+3000;
+ api(m,p,b).catch(e=>{if(e&&e.err==='pin'){PINK='';toast('PIN guru salah');hold=0;load()}else if(e&&e.err==='papan')toast('Papan tidak ditemukan di server. Minta link terbaru dari guru.');else toast('Koneksi bermasalah, coba lagi ya')})};
+const seed=()=>({id:uid(),title:'Refleksi Hari Ini',q:'Apa hal paling menarik yang kamu pelajari hari ini?',theme:'langit',o:Date.now(),cards:[]});
+async function load(){if(Date.now()<hold)return;try{const d=await api('GET',HID?'/boards/'+HID:'/boards');
+ if(!d){if(!GURU){ST={t:'Belum ada papan',q:'Guru belum membuat papan refleksi.',d:'Belum ada papan. Coba lagi nanti atau tanyakan ke guru.'};render();return}const b=seed();await api('PUT','/boards/'+b.id,{title:b.title,q:b.q,theme:b.theme,o:b.o});return load()}
+ const j=JSON.stringify(d);if(j===last)return;last=j;
+ S.boards=Object.entries(d).map(([id,b])=>({id,title:b.title||'Papan',q:b.q||'',theme:b.theme||'langit',o:b.o||0,
+  cards:Object.entries(b.cards||{}).map(([cid,c])=>({...c,id:cid,rx:c.rx||{}})).sort((x,y)=>(y.t||0)-(x.t||0))})).sort((x,y)=>x.o-y.o);
+ if(!S.boards.length&&SISWA)ST=HID?{t:'Papan tidak ditemukan',q:'Link papan ini tidak ada di server.',d:'Papan tidak ditemukan. Minta link terbaru dari guru, ya.'}:{t:'Belum ada papan',q:'Guru belum membuat papan refleksi.',d:'Belum ada papan. Coba lagi nanti atau tanyakan ke guru.'};
+ render()}catch(e){if(!S.boards.length){ST={t:'Tidak terhubung',q:'Tidak bisa terhubung ke server penyimpanan.',d:'Periksa internet. Jika tetap gagal, hubungi guru (alamat skrip mungkin belum benar).'};render()}}}
+
+let fresh=null,delId=null,delT;
+
+function deco(t){const d=$('#deco');d.innerHTML='';const a=[...t.d.match(/\p{Extended_Pictographic}\uFE0F?/gu)];
+ for(let i=0;i<14;i++){const s=document.createElement('span');s.textContent=a[i%a.length];
+  s.style.cssText=`left:${Math.random()*96}%;font-size:${22+Math.random()*34}px;animation-duration:${14+Math.random()*18}s;animation-delay:-${Math.random()*20}s`;d.appendChild(s)}}
+function theme(){const b=cur(),t=THEMES.find(x=>x.id===b.theme)||THEMES[0],r=document.documentElement.style;
+ r.setProperty('--bg',t.bg);r.setProperty('--ink',t.ink);r.setProperty('--panel',t.panel);r.setProperty('--acc',t.acc);r.setProperty('--accink',t.ai);
+ document.body.classList.toggle('kertas',t.id==='kertas');document.body.classList.toggle('siswa',SISWA);document.body.classList.toggle('tetap',!!HID);
+ if(deco.k!==t.id){deco.k=t.id;deco(t)}}
+function render(){
+ theme();const b=cur();$('#fab').style.display=b.id?'':'none';
+ {const sel=$('#sel'),h=S.boards.map(x=>`<option value="${x.id}">${esc(x.title)} (${x.cards.length})</option>`).join('')||'<option>Memuat…</option>';if(sel.innerHTML!==h)sel.innerHTML=h;sel.value=b.id}
+ $('#q').textContent=b.q;
+ $('#grid').innerHTML=b.cards.length?b.cards.map((c,i)=>`<div class="card ${c.id===fresh?'pop':''}" style="background:${c.color};--r:${((i*37)%7-3)*.6}deg">
+  <button class="del" data-del="${c.id}" title="Hapus">✕</button><div class="em">${esc(c.emoji)}</div><p>${esc(c.text)}</p><div class="by">— ${esc(c.name||'Anonim')}</div>
+  <div class="rx">${RX.map(e=>`<button data-rx="${c.id}" data-e="${e}">${e}${c.rx&&c.rx[e]?' '+c.rx[e]:''}</button>`).join('')}</div></div>`).join('')
+  :(b.id?'<div class="empty"><b>📝</b>Belum ada jawaban. Tekan tombol ＋ untuk jadi yang pertama!</div>':'<div class="empty"><b>⚠️</b>'+esc(ST.d)+'</div>');
+ fresh=null;
+
+}
+function modal(html,mount){const o=document.createElement('div');o.className='ov';o.innerHTML=`<div class="modal">${html}</div>`;
+ o.addEventListener('mousedown',e=>{if(e.target===o)o.remove()});document.body.appendChild(o);mount&&mount(o);return o}
+function confetti(e){for(let i=0;i<16;i++){const s=document.createElement('span');s.className='conf';s.textContent=e;
+ s.style.cssText=`left:50%;top:55%;--x:${(Math.random()-.5)*600}px;--y:${-Math.random()*420}px`;document.body.appendChild(s);setTimeout(()=>s.remove(),1300)}}
+
+function addCard(){
+ let em='😊',col=COLORS[0];
+ modal(`<h2>✨ Tulis refleksimu</h2>
+ <label>Namamu</label><input id="n" maxlength="30" placeholder="Nama (boleh dikosongkan)" value="${esc(S.name||'')}">
+ <label>Jawaban refleksi</label><textarea id="t" maxlength="300" placeholder="Aku belajar bahwa…"></textarea>
+ <label>Pilih emoji</label><div class="emg" id="eg">${EMOS.map(e=>`<button data-e="${e}" class="${e===em?'on':''}">${e}</button>`).join('')}</div>
+ <input id="ce" maxlength="4" placeholder="…atau ketik emoji sendiri 🎨" style="margin-top:8px">
+ <label>Warna kartu</label><div class="sw" id="sw">${COLORS.map(c=>`<button data-c="${c}" style="background:${c}" class="${c===col?'on':''}"></button>`).join('')}</div>
+ <div class="foot"><button id="x">Batal</button><button class="go" id="ok">Kirim 🚀</button></div>`,o=>{
+  const mark=(sel,att,v)=>o.querySelectorAll(sel+' button').forEach(b=>b.classList.toggle('on',b.dataset[att]===v));
+  o.querySelector('#eg').onclick=e=>{const b=e.target.closest('button');if(b){em=b.dataset.e;o.querySelector('#ce').value='';mark('#eg','e',em)}};
+  o.querySelector('#ce').oninput=e=>{if(e.target.value.trim()){em=e.target.value.trim();mark('#eg','e','')}};
+  o.querySelector('#sw').onclick=e=>{const b=e.target.closest('button');if(b){col=b.dataset.c;mark('#sw','c',col)}};
+  o.querySelector('#x').onclick=()=>o.remove();
+  o.querySelector('#ok').onclick=()=>{const t=o.querySelector('#t').value.trim();if(!t){o.querySelector('#t').focus();return}
+   S.name=o.querySelector('#n').value.trim();const c={id:uid(),name:S.name,text:t,emoji:em,color:col,rx:{},t:Date.now()};
+   cur().cards.unshift(c);fresh=c.id;sync('PUT','/boards/'+cur().id+'/cards/'+c.id,c);o.remove();render();confetti(em)};
+  o.querySelector('#t').focus()});
+}
+function settings(isNew){
+ const b=cur();
+ modal(`<h2>${isNew?'🆕 Papan baru':'⚙️ Atur papan'}</h2>
+ <label>Nama tab</label><input id="a" maxlength="24" value="${esc(b.title)}">
+ <label>Pertanyaan refleksi</label><textarea id="b" maxlength="200">${esc(b.q)}</textarea>
+ <div class="foot">${S.boards.length>1?'<button class="red" id="d">🗑 Hapus papan</button>':''}<button id="x">Batal</button><button class="go" id="ok">Simpan</button></div>`,o=>{
+  let sure=false;const d=o.querySelector('#d');
+  if(d)d.onclick=()=>{if(!sure){sure=true;d.textContent='Yakin hapus?';return}const id=b.id;S.boards=S.boards.filter(x=>x.id!==id);AID=null;sync('DELETE','/boards/'+id);o.remove();render()};
+  o.querySelector('#x').onclick=()=>{o.remove();if(isNew){S.boards=S.boards.filter(x=>x!==b);AID=null;sync('DELETE','/boards/'+b.id);render()}};
+  o.querySelector('#ok').onclick=()=>{b.title=o.querySelector('#a').value.trim()||'Papan';b.q=o.querySelector('#b').value.trim()||'Tulis pertanyaanmu…';sync('PATCH','/boards/'+b.id,{title:b.title,q:b.q});o.remove();render()};
+  o.querySelector('#b').focus()});
+}
+function themes(){
+ modal(`<h2>🎨 Pilih tema</h2><div class="thg">${THEMES.map(t=>`<button data-t="${t.id}" class="${cur().theme===t.id?'on':''}" style="background:${t.bg};color:${t.ink}"><span>${t.i}</span>${t.n}</button>`).join('')}</div>
+ <div class="foot"><button class="go" id="x">Selesai</button></div>`,o=>{
+  o.querySelector('#x').onclick=()=>o.remove();
+  o.querySelector('.thg').onclick=e=>{const b=e.target.closest('button');if(!b)return;cur().theme=b.dataset.t;sync('PATCH','/boards/'+cur().id,{theme:b.dataset.t});theme();
+   o.querySelectorAll('.thg button').forEach(x=>x.classList.toggle('on',x===b))}});
+}
+document.addEventListener('click',e=>{
+ const t=e.target.closest('.tab');if(t){AID=S.boards[+t.dataset.i].id;save();render();return}
+ if(e.target.closest('#newTab')){const nb={id:uid(),title:'Papan '+(S.boards.length+1),q:'Tulis pertanyaan refleksimu di sini…',theme:cur().theme,o:Date.now(),cards:[]};S.boards.push(nb);AID=nb.id;sync('PUT','/boards/'+nb.id,{title:nb.title,q:nb.q,theme:nb.theme,o:nb.o});render();settings(true);return}
+ const r=e.target.closest('[data-rx]');if(r){const c=cur().cards.find(x=>x.id===r.dataset.rx);c.rx=c.rx||{};c.rx[r.dataset.e]=(c.rx[r.dataset.e]||0)+1;sync('PUT','/boards/'+cur().id+'/cards/'+c.id+'/rx/'+encodeURIComponent(r.dataset.e),{'.sv':{increment:1}});render();return}
+ const d=e.target.closest('[data-del]');if(d){const id=d.dataset.del;
+  if(delId===id){cur().cards=cur().cards.filter(x=>x.id!==id);delId=null;sync('DELETE','/boards/'+cur().id+'/cards/'+id);render()}
+  else{delId=id;d.classList.add('sure');d.textContent='Hapus?';clearTimeout(delT);delT=setTimeout(()=>{delId=null;render()},2500)}}
+});
+$('#fab').onclick=addCard;$('#bSet').onclick=()=>settings(false);$('#bTheme').onclick=themes;
+$('#sel').onchange=e=>{AID=e.target.value;save();render()};
+$('#bLink').onclick=links;
+$('#bQR').onclick=()=>showQR(cur());
+function showQR(b,url){if(!b)return;if(typeof qrcode==='undefined'){toast('QR butuh koneksi internet');return}
+const u=url||linkOf(b.id),q=qrcode(0,'M');q.addData(u);q.make();
+modal(`<div style="text-align:center"><h2 style="margin-bottom:4px">${esc(b.title)}</h2><p style="margin:0 0 14px;opacity:.75">${esc(b.q)}</p><img src="${q.createDataURL(8,4)}" alt="QR" style="width:min(320px,100%);image-rendering:pixelated;border-radius:16px;border:2px solid #e3dff2"><p style="margin:12px 0 0;font-size:1.05rem;font-weight:600">Scan untuk menjawab 📱</p><p style="font-size:.75rem;word-break:break-all;opacity:.6">${esc(u)}</p></div><div class="foot"><button class="go" id="x">Tutup</button></div>`,o=>o.querySelector('#x').onclick=()=>o.remove())}
+addEventListener('hashchange',()=>{GURU=H()==='guru';SISWA=!GURU;HID=(!GURU&&H())?H():'';if(HID)AID=HID;last='';render();if(REMOTE)load()});
+const umumLink=()=>location.href.split('#')[0],linkOf=id=>umumLink()+'#'+id;
+async function copy(t,b){try{await navigator.clipboard.writeText(t);b.textContent='Tersalin ✓'}catch(e){b.previousElementSibling.select();b.textContent='Tekan Ctrl+C'}setTimeout(()=>b.textContent='Salin',2000)}
+function links(){modal(`<h2>🔗 Link untuk siswa</h2><p style="margin:0;font-size:.9rem;opacity:.8"><b>Link umum</b> sama dengan kartu di portal: siswa memilih papan sendiri (papan terbaru tampil lebih dulu). <b>Link per papan</b> mengunci siswa ke satu papan.</p><label>Link umum (portal)</label><div style=\"display:flex;gap:8px\"><input readonly value=\"${esc(umumLink())}\" onfocus=\"this.select()\"><button class=\"cp\">Salin</button><button class=\"cp qr\" data-umum=\"1\">📱 QR</button></div>${S.boards.map(b=>`<label>${esc(b.title)}</label><div style="display:flex;gap:8px"><input readonly value="${esc(linkOf(b.id))}" onfocus="this.select()"><button class="cp">Salin</button><button class="cp qr" data-id="${b.id}">📱 QR</button></div>`).join('')}<div class="foot"><button class="go" id="x">Selesai</button></div>`,o=>{o.querySelector('#x').onclick=()=>o.remove();o.querySelectorAll('.cp:not(.qr)').forEach(b=>b.onclick=()=>copy(b.previousElementSibling.value,b));o.querySelectorAll('.qr').forEach(b=>b.onclick=()=>b.dataset.umum?showQR({title:'Papan Refleksi',q:'Pindai untuk menulis refleksimu'},umumLink()):showQR(S.boards.find(x=>x.id===b.dataset.id)))})}
+if(REMOTE){render();load();setInterval(()=>{if(!document.hidden)load()},8000)}
+else{if(!S.boards.length){const b=seed();b.cards=[{id:uid(),name:'Contoh Siswa',text:'Hari ini aku belajar bahwa berdiskusi itu seru kalau semua teman berani bicara!',emoji:'🤩',color:'#FFF3A3',rx:{'❤️':2},t:2},{id:uid(),name:'Siswa Lain',text:'Aku masih bingung bagian akhir, tapi besok mau tanya lagi ke teman.',emoji:'🤔',color:'#BDE3FF',rx:{'👍':1},t:1}];S.boards=[b];save()}
+ render();toast('Mode demo: jawaban hanya tersimpan di perangkat ini')}
+</script>
+</body>
+</html>
