@@ -112,14 +112,15 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 // Isi scriptUrl dengan URL aplikasi web Google Apps Script (berakhiran /exec) agar semua jawaban
 // tersimpan di Google Sheets dan terlihat oleh semua siswa.
 // Jika dikosongkan, aplikasi berjalan mode demo (tersimpan hanya di perangkat ini).
-const CONFIG={scriptUrl:'https://script.google.com/macros/s/AKfycbxKmXHU6Nfoo14zp3qTd_fjFyWhHUX6ugbLmAN-P3Rd7ua4vzpMNXOTU_uW7oCbMatR/exec'};
+const CONFIG={scriptUrl:''};
 const base=CONFIG.scriptUrl.replace(/\/$/,''),REMOTE=!!base;
 let PINK='';
 let S={name:'',boards:[]},AID=null,last='',hold=0;
 try{const l=JSON.parse(localStorage.getItem(K)||'{}');S.name=l.name||'';AID=l.aid||null;if(!REMOTE&&l.boards)S.boards=l.boards}catch(e){}
 const H=()=>decodeURIComponent(location.hash.slice(1));let SISWA=!!H();if(SISWA)AID=H();
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(REMOTE?{name:S.name,aid:AID}:{name:S.name,aid:AID,boards:S.boards}))}catch(e){}};
-const cur=()=>S.boards.find(b=>b.id===AID)||S.boards[0]||{id:'',title:'Memuat…',q:'Memuat papan…',theme:'langit',cards:[]};
+let ST={t:'Memuat…',q:'Memuat papan…',d:'Sedang memuat papan…'};
+const cur=()=>S.boards.find(b=>b.id===AID)||S.boards[0]||{id:'',title:ST.t,q:ST.q,theme:'langit',cards:[]};
 async function api(m,p,b){
  if(m==='GET'){const mm=p.match(/^\/boards\/([^/]+)$/);const r=await fetch(base+'?aksi=ambil'+(mm?'&papan='+encodeURIComponent(mm[1]):''),{cache:'no-store'});if(!r.ok)throw 0;return r.json()}
  const r=await fetch(base,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({m,p,b:b===undefined?null:b,pin:PINK})});
@@ -131,14 +132,15 @@ const sync=(m,p,b)=>{save();if(!REMOTE)return;
   if(SISWA){toast('Hanya guru yang bisa melakukan ini');load();return}
   if(!PINK){const x=prompt('Masukkan PIN guru:');if(x===null){toast('Dibatalkan');hold=0;load();return}PINK=x}}
  hold=Date.now()+3000;
- api(m,p,b).catch(e=>{if(e&&e.err==='pin'){PINK='';toast('PIN guru salah');hold=0;load()}else toast('Koneksi bermasalah, coba lagi ya')})};
+ api(m,p,b).catch(e=>{if(e&&e.err==='pin'){PINK='';toast('PIN guru salah');hold=0;load()}else if(e&&e.err==='papan')toast('Papan tidak ditemukan di server. Minta link terbaru dari guru.');else toast('Koneksi bermasalah, coba lagi ya')})};
 const seed=()=>({id:uid(),title:'Refleksi Hari Ini',q:'Apa hal paling menarik yang kamu pelajari hari ini?',theme:'langit',o:Date.now(),cards:[]});
 async function load(){if(Date.now()<hold)return;try{const d=await api('GET',SISWA&&AID?'/boards/'+AID:'/boards');
  if(!d){const b=seed();await api('PUT','/boards/'+b.id,{title:b.title,q:b.q,theme:b.theme,o:b.o});return load()}
  const j=JSON.stringify(d);if(j===last)return;last=j;
  S.boards=Object.entries(d).map(([id,b])=>({id,title:b.title||'Papan',q:b.q||'',theme:b.theme||'langit',o:b.o||0,
   cards:Object.entries(b.cards||{}).map(([cid,c])=>({...c,id:cid,rx:c.rx||{}})).sort((x,y)=>(y.t||0)-(x.t||0))})).sort((x,y)=>x.o-y.o);
- render()}catch(e){}}
+ if(!S.boards.length&&SISWA)ST={t:'Papan tidak ditemukan',q:'Link papan ini tidak ada di server.',d:'Papan tidak ditemukan. Minta link terbaru dari guru, ya.'};
+ render()}catch(e){if(!S.boards.length){ST={t:'Tidak terhubung',q:'Tidak bisa terhubung ke server penyimpanan.',d:'Periksa internet. Jika tetap gagal, hubungi guru (alamat skrip mungkin belum benar).'};render()}}}
 
 let fresh=null,delId=null,delT;
 
@@ -150,13 +152,13 @@ function theme(){const b=cur(),t=THEMES.find(x=>x.id===b.theme)||THEMES[0],r=doc
  document.body.classList.toggle('kertas',t.id==='kertas');document.body.classList.toggle('siswa',SISWA);
  if(deco.k!==t.id){deco.k=t.id;deco(t)}}
 function render(){
- theme();const b=cur();
+ theme();const b=cur();$('#fab').style.display=b.id?'':'none';
  {const sel=$('#sel'),h=S.boards.map(x=>`<option value="${x.id}">${esc(x.title)} (${x.cards.length})</option>`).join('')||'<option>Memuat…</option>';if(sel.innerHTML!==h)sel.innerHTML=h;sel.value=b.id}
  $('#q').textContent=b.q;
  $('#grid').innerHTML=b.cards.length?b.cards.map((c,i)=>`<div class="card ${c.id===fresh?'pop':''}" style="background:${c.color};--r:${((i*37)%7-3)*.6}deg">
   <button class="del" data-del="${c.id}" title="Hapus">✕</button><div class="em">${esc(c.emoji)}</div><p>${esc(c.text)}</p><div class="by">— ${esc(c.name||'Anonim')}</div>
   <div class="rx">${RX.map(e=>`<button data-rx="${c.id}" data-e="${e}">${e}${c.rx&&c.rx[e]?' '+c.rx[e]:''}</button>`).join('')}</div></div>`).join('')
-  :'<div class="empty"><b>📝</b>Belum ada jawaban. Tekan tombol ＋ untuk jadi yang pertama!</div>';
+  :(b.id?'<div class="empty"><b>📝</b>Belum ada jawaban. Tekan tombol ＋ untuk jadi yang pertama!</div>':'<div class="empty"><b>⚠️</b>'+esc(ST.d)+'</div>');
  fresh=null;
 
 }
