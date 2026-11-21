@@ -112,7 +112,7 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 // Isi scriptUrl dengan URL aplikasi web Google Apps Script (berakhiran /exec) agar semua jawaban
 // tersimpan di Google Sheets dan terlihat oleh semua siswa.
 // Jika dikosongkan, aplikasi berjalan mode demo (tersimpan hanya di perangkat ini).
-const CONFIG={scriptUrl:''};
+const CONFIG={scriptUrl:'https://script.google.com/macros/s/AKfycbxKmXHU6Nfoo14zp3qTd_fjFyWhHUX6ugbLmAN-P3Rd7ua4vzpMNXOTU_uW7oCbMatR/exec'};
 const base=CONFIG.scriptUrl.replace(/\/$/,''),REMOTE=!!base;
 let PINK='';
 let S={name:'',boards:[]},AID=null,last='',hold=0;
