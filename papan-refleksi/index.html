@@ -53,9 +53,12 @@ body.kertas{background-image:repeating-linear-gradient(transparent 0 31px,#cfe3f
 .modal input,.modal textarea{width:100%;font:inherit;padding:11px 14px;border:2px solid #e3dff2;border-radius:14px;background:#faf9ff;color:#2b2540}
 .modal input:focus,.modal textarea:focus{outline:0;border-color:#7c5cff}
 .modal textarea{min-height:96px;resize:vertical}
-.emg{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.emt{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+.emt button{flex:none;white-space:nowrap;border:0;background:#f3f0ff;color:#5a4d8c;border-radius:99px;padding:7px 13px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
+.emt button.on{background:#7c5cff;color:#fff}
+.emg{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:196px;overflow-y:auto;padding:8px 6px;border:2px solid #efeaff;border-radius:14px;overscroll-behavior:contain}
 .emg button,.sw button{border:2px solid transparent;background:#f3f0ff;border-radius:12px;font-size:1.5rem;padding:4px 0;cursor:pointer}
-.emg button.on{border-color:#7c5cff;background:#e6deff;transform:scale(1.15)}
+.emg button.on{border-color:#7c5cff;background:#e6deff;transform:scale(1.08)}
 .sw{display:flex;gap:10px;flex-wrap:wrap}
 .sw button{width:38px;height:38px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #d9d4ec}
 .sw button.on{box-shadow:0 0 0 3px #7c5cff;transform:scale(1.15)}
@@ -77,6 +80,19 @@ body.kertas{background-image:repeating-linear-gradient(transparent 0 31px,#cfe3f
 body.siswa .pick,body.siswa .acts,body.siswa .del{display:none}
 .logo{line-height:1.15}
 .teacher{display:block;font-size:.85rem;font-weight:500;opacity:.8;margin:2px 0 0 34px}
+
+.modal .foot{position:sticky;bottom:-24px;background:linear-gradient(rgba(255,255,255,0),#fff 28%);padding-top:16px;margin-top:8px;z-index:2}
+@media(max-width:560px){.emg{max-height:150px}}
+
+.rx button.on{background:#7c5cff;color:#fff}
+.rx button:disabled{opacity:.55;cursor:not-allowed}
+.rx .cm{margin-left:auto}
+.kc{border-radius:18px;padding:14px;margin-bottom:10px}.kc .em{font-size:1.8rem}.kc p{margin:6px 0}
+#kl{max-height:210px;overflow:auto;margin:8px 0}
+.kom{position:relative;background:#f3f0ff;border-radius:14px;padding:8px 34px 8px 12px;margin:6px 0;font-size:.92rem;word-break:break-word}
+.kom b{display:block;font-size:.78rem;color:#5a4d8c}
+.kom .kdel{position:absolute;right:6px;top:6px;border:0;background:transparent;cursor:pointer;color:#c0143c;font-size:.9rem}
+.kosong{opacity:.7;margin:6px 0}
 </style>
 </head>
 <body>
@@ -103,11 +119,27 @@ const THEMES=[
 {id:'neon',n:'Neon Gamer',i:'👾',bg:'linear-gradient(160deg,#0d0d1a,#1a0b2e 60%,#091a3a)',ink:'#f2f2ff',panel:'rgba(255,255,255,.08)',acc:'#00f5d4',ai:'#04121a',d:'⚡💜🎮👾'},
 {id:'kertas',n:'Buku Tulis',i:'✏️',bg:'#fffdf5',ink:'#3b3b58',panel:'rgba(255,255,255,.85)',acc:'#ff7a45',ai:'#fff',d:'✏️📚📝🎒'}];
 const COLORS=['#FFF3A3','#FFC9DE','#C6F1D6','#BDE3FF','#E4D4FF','#FFD8B0','#FFFFFF'];
-const EMOS=['😀','😍','🤩','😎','🥳','😊','🤔','😅','😴','😢','😡','🤯','💡','🔥','🌟','💪','🎯','📚','🏆','🚀','❤️','👍','🙌','🙏','🍀','🎉','🧠','✨','🦄','🐱','🐶'];
+const EMOGRUP={
+ 'Wajah':['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','😉','😍','🥰','😘','😋','😎','🤩','🥳','🤗','🤔','🤨','😐','😴','😪','😢','😭','😡','😱','🤯','😬','🙄','😏'],
+ 'Tangan':['👍','👎','👏','🙌','🙏','🤝','💪','👌','✌️','🤞','🤟','🤘','👋','✋','🖐️','☝️','👆','👇'],
+ 'Hati & simbol':['❤️','🧡','💛','💚','💙','💜','🖤','🤍','💖','💕','💯','✨','⭐','🌟','💫','🔥','⚡','💥','💡','✅','❗','❓','💬','💭'],
+ 'Alam & hewan':['🌈','☀️','🌙','⛅','🌸','🌻','🌳','🍀','🌍','🌊','🦄','🐱','🐶','🐰','🦊','🐼','🐨','🦁','🐯','🐵','🐢','🐝','🦋','🐬'],
+ 'Makanan':['🍎','🍌','🍇','🍉','🍓','🍕','🍔','🍟','🍩','🍪','🍫','☕','🍜','🍰'],
+ 'Sekolah & main':['📚','📖','✏️','📝','🎒','🎓','🏫','🧠','🔬','🔭','💻','📱','🎯','🏆','🥇','🎉','🎊','🎈','🎁','🎵','🎨','⚽','🏀','🏸','🚀','🏅','🧩','🎮'],
+ 'Bangsa':['🇮🇩','🦅','🏛️','⚖️','🗳️','🕊️','📣','📢','🌐','🛡️']
+};
+const EMOS=Object.values(EMOGRUP).flat();
+const emoBtns=(list,sel)=>list.map(e=>`<button data-e="${e}" class="${e===sel?'on':''}">${e}</button>`).join('');
 const RX=['❤️','👍','😂','🌟'];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
+const sc=c=>/^#[0-9a-f]{3,8}$/i.test(c)?c:'#FFF3A3';
+const cleanRx=r=>{const o={};for(const k in (r||{}))if(typeof r[k]==='string')o[k]=r[k];return o};
+const normC=c=>({...c,rx:cleanRx(c.rx),comments:Array.isArray(c.comments)?c.comments:Object.values(c.comments||{}).sort((a,b)=>(a.t||0)-(b.t||0))});
+const normB=b=>({...b,cards:(b.cards||[]).map(normC)});
+const isMine=c=>S.mine.includes(c.id);   /* jawaban yang dibuat di perangkat ini */
+let OC=null;const RXT={};
 // === PENGATURAN PENYIMPANAN ===
 // Isi scriptUrl dengan URL aplikasi web Google Apps Script (berakhiran /exec) agar semua jawaban
 // tersimpan di Google Sheets dan terlihat oleh semua siswa.
@@ -116,9 +148,10 @@ const CONFIG={scriptUrl:'https://script.google.com/macros/s/AKfycbwUjgmrOOcr3fFq
 const base=CONFIG.scriptUrl.replace(/\/$/,''),REMOTE=!!base;
 let PINK='';
 let S={name:'',boards:[]},AID=null,last='',hold=0;
-try{const l=JSON.parse(localStorage.getItem(K)||'{}');S.name=l.name||'';AID=l.aid||null;if(!REMOTE&&l.boards)S.boards=l.boards}catch(e){}
+try{const l=JSON.parse(localStorage.getItem(K)||'{}');S.name=l.name||'';AID=l.aid||null;S.uid=l.uid;S.mine=Array.isArray(l.mine)?l.mine:[];if(!REMOTE&&l.boards)S.boards=l.boards.map(normB)}catch(e){}
+S.uid=S.uid||uid();S.mine=S.mine||[];
 const H=()=>decodeURIComponent(location.hash.slice(1));let SISWA=!!H();if(SISWA)AID=H();
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(REMOTE?{name:S.name,aid:AID}:{name:S.name,aid:AID,boards:S.boards}))}catch(e){}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(REMOTE?{name:S.name,aid:AID,uid:S.uid,mine:S.mine}:{name:S.name,aid:AID,uid:S.uid,mine:S.mine,boards:S.boards}))}catch(e){}};
 let ST={t:'Memuat…',q:'Memuat papan…',d:'Sedang memuat papan…'};
 const cur=()=>S.boards.find(b=>b.id===AID)||S.boards[0]||{id:'',title:ST.t,q:ST.q,theme:'langit',cards:[]};
 async function api(m,p,b){
@@ -134,7 +167,7 @@ async function pinGuru(){
  try{const j=await cekPin(x);if(j&&j.ok){PINK=x;return true}toast('PIN guru salah');return false}
  catch(e){toast('Koneksi bermasalah, coba lagi ya');return false}}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3200)}
-const perluPin=(m,p)=>/^\/boards\/[^/]+$/.test(p)||(m==='DELETE'&&/\/cards\/[^/]+$/.test(p));
+const perluPin=(m,p)=>/^\/boards\/[^/]+$/.test(p)||(m==='DELETE'&&/\/(cards|comments)\/[^/]+$/.test(p));
 const sync=(m,p,b)=>{save();if(!REMOTE)return;
  last='';/* tampilan sudah diubah lebih dulu; paksa muat ulang dari server agar selalu sama dengan data tersimpan */
  if(perluPin(m,p)&&SISWA){toast('Hanya guru yang bisa melakukan ini');last='';load();return}
@@ -149,7 +182,7 @@ async function load(){if(Date.now()<hold)return false;try{const d=await api('GET
  if(!d){const b=seed();await api('PUT','/boards/'+b.id,{title:b.title,q:b.q,theme:b.theme,o:b.o});return load()}
  const j=JSON.stringify(d);if(j===last)return true;last=j;
  S.boards=Object.entries(d).map(([id,b])=>({id,title:b.title||'Papan',q:b.q||'',theme:b.theme||'langit',o:b.o||0,
-  cards:Object.entries(b.cards||{}).map(([cid,c])=>({...c,id:cid,rx:c.rx||{}})).sort((x,y)=>(y.t||0)-(x.t||0))})).sort((x,y)=>x.o-y.o);
+  cards:Object.entries(b.cards||{}).map(([cid,c])=>normC({...c,id:cid})).sort((x,y)=>(y.t||0)-(x.t||0))})).sort((x,y)=>x.o-y.o);
  if(!S.boards.length&&SISWA)ST={t:'Papan tidak ditemukan',q:'Link papan ini tidak ada di server.',d:'Papan tidak ditemukan. Minta link terbaru dari guru, ya.'};
  render();return true}catch(e){if(!S.boards.length){ST={t:'Tidak terhubung',q:'Tidak bisa terhubung ke server penyimpanan.',d:'Periksa internet. Jika tetap gagal, hubungi guru (alamat skrip mungkin belum benar).'};render()}return false}}
 
@@ -166,13 +199,30 @@ function render(){
  theme();const b=cur();$('#fab').style.display=b.id?'':'none';
  {const sel=$('#sel'),h=S.boards.map(x=>`<option value="${x.id}">${esc(x.title)} (${x.cards.length})</option>`).join('')||'<option>Memuat…</option>';if(sel.innerHTML!==h)sel.innerHTML=h;sel.value=b.id}
  $('#q').textContent=b.q;
- $('#grid').innerHTML=b.cards.length?b.cards.map((c,i)=>`<div class="card ${c.id===fresh?'pop':''}" style="background:${c.color};--r:${((i*37)%7-3)*.6}deg">
+ $('#grid').innerHTML=b.cards.length?b.cards.map((c,i)=>`<div class="card ${c.id===fresh?'pop':''}" style="background:${sc(c.color)};--r:${((i*37)%7-3)*.6}deg">
   <button class="del" data-del="${c.id}" title="Hapus">✕</button><div class="em">${esc(c.emoji)}</div><p>${esc(c.text)}</p><div class="by">— ${esc(c.name||'Anonim')}</div>
-  <div class="rx">${RX.map(e=>`<button data-rx="${c.id}" data-e="${e}">${e}${c.rx&&c.rx[e]?' '+c.rx[e]:''}</button>`).join('')}</div></div>`).join('')
+  <div class="rx">${RX.map(e=>{const n=Object.values(c.rx||{}).filter(x=>x===e).length;return `<button data-rx="${c.id}" data-e="${e}" class="${(c.rx||{})[S.uid]===e?'on':''}"${isMine(c)?' disabled title="Kamu tidak bisa memberi reaksi pada jawabanmu sendiri"':''}>${e}${n?' '+n:''}</button>`}).join('')}<button class="cm" data-cm="${c.id}" title="Komentar">💬${(c.comments||[]).length?' '+c.comments.length:''}</button></div></div>`).join('')
   :(b.id?'<div class="empty"><b>📝</b>Belum ada jawaban. Tekan tombol ＋ untuk jadi yang pertama!</div>':'<div class="empty"><b>⚠️</b>'+esc(ST.d)+'</div>');
  fresh=null;
-
+ if(OC){const l=$('#kl');if(!l)OC=null;else{const c=b.cards.find(x=>x.id===OC);if(!c){const ov=$('.ov');if(ov)ov.remove();OC=null}else l.innerHTML=commentsHTML(c)}}
 }
+function commentsHTML(c){const L=c.comments||[];return L.length?L.map(k=>`<div class="kom"><b>${esc(k.name||'Anonim')}</b>${esc(k.text)}${SISWA?'':`<button class="kdel" data-kdel="${k.id}" title="Hapus komentar">✕</button>`}</div>`).join(''):'<p class="kosong">Belum ada komentar. Jadi yang pertama!</p>'}
+function openComments(cid){const c=cur().cards.find(x=>x.id===cid);if(!c)return;OC=cid;
+ modal(`<h2>💬 Komentar</h2><div class="kc" style="background:${sc(c.color)}"><div class="em">${esc(c.emoji)}</div><p>${esc(c.text)}</p><div class="by">— ${esc(c.name||'Anonim')}</div></div>
+ <div id="kl">${commentsHTML(c)}</div>
+ <label>Namamu</label><input id="kn" maxlength="30" value="${esc(S.name||'')}" placeholder="Nama (boleh dikosongkan)">
+ <label>Komentarmu</label><textarea id="kt" maxlength="200" placeholder="Tulis komentar yang baik…"></textarea>
+ <div class="foot"><button id="x">Tutup</button><button class="go" id="ok">Kirim komentar</button></div>`,o=>{
+  o.querySelector('#x').onclick=()=>{OC=null;o.remove()};
+  o.querySelector('#ok').onclick=()=>{const t=o.querySelector('#kt').value.trim();if(!t){o.querySelector('#kt').focus();return}
+   S.name=o.querySelector('#kn').value.trim();const cc=cur().cards.find(x=>x.id===cid);if(!cc){OC=null;o.remove();return}
+   const k={id:uid(),name:S.name,text:t.slice(0,200),t:Date.now()};cc.comments=cc.comments||[];cc.comments.push(k);
+   sync('PUT','/boards/'+cur().id+'/cards/'+cid+'/comments/'+k.id,{name:k.name,text:k.text,t:k.t,uid:S.uid});
+   o.querySelector('#kt').value='';render()};
+  o.addEventListener('click',async e=>{const d=e.target.closest('[data-kdel]');if(!d)return;
+   if(!d.dataset.sure){d.dataset.sure='1';d.textContent='Hapus?';setTimeout(()=>{if(d.isConnected){delete d.dataset.sure;d.textContent='✕'}},3000);return}
+   if(!await pinGuru())return;const cc=cur().cards.find(x=>x.id===cid);if(cc)cc.comments=cc.comments.filter(x=>x.id!==d.dataset.kdel);
+   sync('DELETE','/boards/'+cur().id+'/cards/'+cid+'/comments/'+d.dataset.kdel);render()})})}
 function modal(html,mount){const o=document.createElement('div');o.className='ov';o.innerHTML=`<div class="modal">${html}</div>`;
  o.addEventListener('mousedown',e=>{if(e.target===o)o.remove()});document.body.appendChild(o);mount&&mount(o);return o}
 function confetti(e){for(let i=0;i<16;i++){const s=document.createElement('span');s.className='conf';s.textContent=e;
@@ -183,17 +233,22 @@ function addCard(){
  modal(`<h2>✨ Tulis refleksimu</h2>
  <label>Namamu</label><input id="n" maxlength="30" placeholder="Nama (boleh dikosongkan)" value="${esc(S.name||'')}">
  <label>Jawaban refleksi</label><textarea id="t" maxlength="300" placeholder="Aku belajar bahwa…"></textarea>
- <label>Pilih emoji</label><div class="emg" id="eg">${EMOS.map(e=>`<button data-e="${e}" class="${e===em?'on':''}">${e}</button>`).join('')}</div>
+ <label>Pilih emoji <span style="font-weight:400;opacity:.7">(${EMOS.length} pilihan, geser untuk melihat lebih banyak)</span></label>
+ <div class="emt" id="et">${['Semua',...Object.keys(EMOGRUP)].map((k,i)=>`<button data-k="${k}" class="${i?'':'on'}">${k}</button>`).join('')}</div>
+ <div class="emg" id="eg">${emoBtns(EMOS,em)}</div>
  <input id="ce" maxlength="4" placeholder="…atau ketik emoji sendiri 🎨" style="margin-top:8px">
  <label>Warna kartu</label><div class="sw" id="sw">${COLORS.map(c=>`<button data-c="${c}" style="background:${c}" class="${c===col?'on':''}"></button>`).join('')}</div>
  <div class="foot"><button id="x">Batal</button><button class="go" id="ok">Kirim 🚀</button></div>`,o=>{
   const mark=(sel,att,v)=>o.querySelectorAll(sel+' button').forEach(b=>b.classList.toggle('on',b.dataset[att]===v));
+  o.querySelector('#et').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+   o.querySelectorAll('#et button').forEach(x=>x.classList.toggle('on',x===b));
+   const g=o.querySelector('#eg');g.innerHTML=emoBtns(b.dataset.k==='Semua'?EMOS:EMOGRUP[b.dataset.k],em);g.scrollTop=0};
   o.querySelector('#eg').onclick=e=>{const b=e.target.closest('button');if(b){em=b.dataset.e;o.querySelector('#ce').value='';mark('#eg','e',em)}};
   o.querySelector('#ce').oninput=e=>{if(e.target.value.trim()){em=e.target.value.trim();mark('#eg','e','')}};
   o.querySelector('#sw').onclick=e=>{const b=e.target.closest('button');if(b){col=b.dataset.c;mark('#sw','c',col)}};
   o.querySelector('#x').onclick=()=>o.remove();
   o.querySelector('#ok').onclick=()=>{const t=o.querySelector('#t').value.trim();if(!t){o.querySelector('#t').focus();return}
-   S.name=o.querySelector('#n').value.trim();const c={id:uid(),name:S.name,text:t,emoji:em,color:col,rx:{},t:Date.now()};
+   S.name=o.querySelector('#n').value.trim();const c={id:uid(),name:S.name,text:t,emoji:em,color:col,rx:{},comments:[],uid:S.uid,t:Date.now()};S.mine.push(c.id);
    cur().cards.unshift(c);fresh=c.id;sync('PUT','/boards/'+cur().id+'/cards/'+c.id,c);o.remove();render();confetti(em)};
   o.querySelector('#t').focus()});
 }
@@ -219,7 +274,12 @@ function themes(){
 document.addEventListener('click',async e=>{
  const t=e.target.closest('.tab');if(t){AID=S.boards[+t.dataset.i].id;save();render();return}
  if(e.target.closest('#newTab')){if(!await pinGuru())return;const nb={id:uid(),title:'Papan '+(S.boards.length+1),q:'Tulis pertanyaan refleksimu di sini…',theme:cur().theme,o:Date.now(),cards:[]};S.boards.push(nb);AID=nb.id;sync('PUT','/boards/'+nb.id,{title:nb.title,q:nb.q,theme:nb.theme,o:nb.o});render();settings(true);return}
- const r=e.target.closest('[data-rx]');if(r){const c=cur().cards.find(x=>x.id===r.dataset.rx);c.rx=c.rx||{};c.rx[r.dataset.e]=(c.rx[r.dataset.e]||0)+1;sync('PUT','/boards/'+cur().id+'/cards/'+c.id+'/rx/'+encodeURIComponent(r.dataset.e),{'.sv':{increment:1}});render();return}
+ const r=e.target.closest('[data-rx]');if(r){const c=cur().cards.find(x=>x.id===r.dataset.rx);if(!c||isMine(c))return;
+ /* satu orang satu reaksi per jawaban: klik reaksi yang sama = batal, klik reaksi lain = ganti */
+ c.rx=c.rx||{};if(c.rx[S.uid]===r.dataset.e)delete c.rx[S.uid];else c.rx[S.uid]=r.dataset.e;
+ const bid=cur().id;hold=Math.max(hold,Date.now()+1500);render();clearTimeout(RXT[c.id]);
+ RXT[c.id]=setTimeout(()=>sync('PUT','/boards/'+bid+'/cards/'+c.id+'/rx/'+S.uid,{e:c.rx[S.uid]||null}),350);return}
+ const cm=e.target.closest('[data-cm]');if(cm){openComments(cm.dataset.cm);return}
  const d=e.target.closest('[data-del]');if(d){const id=d.dataset.del;
   if(delId===id){if(!await pinGuru()){delId=null;render();return}cur().cards=cur().cards.filter(x=>x.id!==id);delId=null;sync('DELETE','/boards/'+cur().id+'/cards/'+id);render()}
   else{delId=id;d.classList.add('sure');d.textContent='Hapus?';clearTimeout(delT);delT=setTimeout(()=>{delId=null;render()},2500)}}
