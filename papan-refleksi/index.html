@@ -74,7 +74,7 @@ body.kertas{background-image:repeating-linear-gradient(transparent 0 31px,#cfe3f
 .sel{font:inherit;font-weight:600;flex:1;min-width:0;max-width:420px;border:0;cursor:pointer;color:var(--ink);background:var(--panel);backdrop-filter:blur(8px);padding:10px 16px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .sel option{color:#2b2540;background:#fff}
 .cp{font:inherit;font-weight:600;border:0;border-radius:999px;padding:0 18px;background:#7c5cff;color:#fff;cursor:pointer;white-space:nowrap}
-body.siswa .acts,body.siswa .del,body.siswa #newTab,body.siswa.tetap .pick{display:none}
+body.siswa .pick,body.siswa .acts,body.siswa .del{display:none}
 .logo{line-height:1.15}
 .teacher{display:block;font-size:.85rem;font-weight:500;opacity:.8;margin:2px 0 0 34px}
 </style>
@@ -117,33 +117,41 @@ const base=CONFIG.scriptUrl.replace(/\/$/,''),REMOTE=!!base;
 let PINK='';
 let S={name:'',boards:[]},AID=null,last='',hold=0;
 try{const l=JSON.parse(localStorage.getItem(K)||'{}');S.name=l.name||'';AID=l.aid||null;if(!REMOTE&&l.boards)S.boards=l.boards}catch(e){}
-const H=()=>decodeURIComponent(location.hash.slice(1));
-/* Tampilan guru: alamat berakhiran #guru. Selain itu = tampilan siswa:
-   tanpa kode -> siswa memilih papan sendiri (dipakai kartu portal); #kodepapan -> terkunci ke satu papan. */
-let GURU=H()==='guru',SISWA=!GURU,HID=(!GURU&&H())?H():'';if(HID)AID=HID;
+const H=()=>decodeURIComponent(location.hash.slice(1));let SISWA=!!H();if(SISWA)AID=H();
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(REMOTE?{name:S.name,aid:AID}:{name:S.name,aid:AID,boards:S.boards}))}catch(e){}};
 let ST={t:'Memuat…',q:'Memuat papan…',d:'Sedang memuat papan…'};
-const cur=()=>S.boards.find(b=>b.id===AID)||(SISWA?S.boards[S.boards.length-1]:S.boards[0])||{id:'',title:ST.t,q:ST.q,theme:'langit',cards:[]};
+const cur=()=>S.boards.find(b=>b.id===AID)||S.boards[0]||{id:'',title:ST.t,q:ST.q,theme:'langit',cards:[]};
 async function api(m,p,b){
  if(m==='GET'){const mm=p.match(/^\/boards\/([^/]+)$/);const r=await fetch(base+'?aksi=ambil'+(mm?'&papan='+encodeURIComponent(mm[1]):''),{cache:'no-store'});if(!r.ok)throw 0;return r.json()}
  const r=await fetch(base,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({m,p,b:b===undefined?null:b,pin:PINK})});
  if(!r.ok)throw 0;const j=await r.json();if(j&&j.ok===false)throw j;return j}
+async function cekPin(x){const r=await fetch(base,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({aksi:'pin',pin:x})});if(!r.ok)throw 0;return r.json()}
+/* Minta PIN guru SEBELUM perubahan dibuat, supaya tampilan tidak berbeda dari data yang tersimpan. */
+async function pinGuru(){
+ if(!REMOTE||PINK)return true;
+ const x=prompt('Masukkan PIN guru:');
+ if(x===null){toast('Dibatalkan, tidak ada yang diubah');return false}
+ try{const j=await cekPin(x);if(j&&j.ok){PINK=x;return true}toast('PIN guru salah');return false}
+ catch(e){toast('Koneksi bermasalah, coba lagi ya');return false}}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3200)}
 const perluPin=(m,p)=>/^\/boards\/[^/]+$/.test(p)||(m==='DELETE'&&/\/cards\/[^/]+$/.test(p));
 const sync=(m,p,b)=>{save();if(!REMOTE)return;
- if(perluPin(m,p)){
-  if(SISWA){toast('Hanya guru yang bisa melakukan ini');load();return}
-  if(!PINK){const x=prompt('Masukkan PIN guru:');if(x===null){toast('Dibatalkan');hold=0;load();return}PINK=x}}
+ last='';/* tampilan sudah diubah lebih dulu; paksa muat ulang dari server agar selalu sama dengan data tersimpan */
+ if(perluPin(m,p)&&SISWA){toast('Hanya guru yang bisa melakukan ini');last='';load();return}
  hold=Date.now()+3000;
- api(m,p,b).catch(e=>{if(e&&e.err==='pin'){PINK='';toast('PIN guru salah');hold=0;load()}else if(e&&e.err==='papan')toast('Papan tidak ditemukan di server. Minta link terbaru dari guru.');else toast('Koneksi bermasalah, coba lagi ya')})};
+ api(m,p,b).catch(e=>{
+  if(e&&e.err==='pin'){PINK='';toast('PIN guru salah atau sudah berubah. Coba lagi.')}
+  else if(e&&e.err==='papan')toast('Papan tidak ditemukan di server.');
+  else toast('Koneksi bermasalah, coba lagi ya');
+  hold=0;last='';load()})};
 const seed=()=>({id:uid(),title:'Refleksi Hari Ini',q:'Apa hal paling menarik yang kamu pelajari hari ini?',theme:'langit',o:Date.now(),cards:[]});
-async function load(){if(Date.now()<hold)return;try{const d=await api('GET',HID?'/boards/'+HID:'/boards');
- if(!d){if(!GURU){ST={t:'Belum ada papan',q:'Guru belum membuat papan refleksi.',d:'Belum ada papan. Coba lagi nanti atau tanyakan ke guru.'};render();return}const b=seed();await api('PUT','/boards/'+b.id,{title:b.title,q:b.q,theme:b.theme,o:b.o});return load()}
- const j=JSON.stringify(d);if(j===last)return;last=j;
+async function load(){if(Date.now()<hold)return false;try{const d=await api('GET',SISWA&&AID?'/boards/'+AID:'/boards');
+ if(!d){const b=seed();await api('PUT','/boards/'+b.id,{title:b.title,q:b.q,theme:b.theme,o:b.o});return load()}
+ const j=JSON.stringify(d);if(j===last)return true;last=j;
  S.boards=Object.entries(d).map(([id,b])=>({id,title:b.title||'Papan',q:b.q||'',theme:b.theme||'langit',o:b.o||0,
   cards:Object.entries(b.cards||{}).map(([cid,c])=>({...c,id:cid,rx:c.rx||{}})).sort((x,y)=>(y.t||0)-(x.t||0))})).sort((x,y)=>x.o-y.o);
- if(!S.boards.length&&SISWA)ST=HID?{t:'Papan tidak ditemukan',q:'Link papan ini tidak ada di server.',d:'Papan tidak ditemukan. Minta link terbaru dari guru, ya.'}:{t:'Belum ada papan',q:'Guru belum membuat papan refleksi.',d:'Belum ada papan. Coba lagi nanti atau tanyakan ke guru.'};
- render()}catch(e){if(!S.boards.length){ST={t:'Tidak terhubung',q:'Tidak bisa terhubung ke server penyimpanan.',d:'Periksa internet. Jika tetap gagal, hubungi guru (alamat skrip mungkin belum benar).'};render()}}}
+ if(!S.boards.length&&SISWA)ST={t:'Papan tidak ditemukan',q:'Link papan ini tidak ada di server.',d:'Papan tidak ditemukan. Minta link terbaru dari guru, ya.'};
+ render();return true}catch(e){if(!S.boards.length){ST={t:'Tidak terhubung',q:'Tidak bisa terhubung ke server penyimpanan.',d:'Periksa internet. Jika tetap gagal, hubungi guru (alamat skrip mungkin belum benar).'};render()}return false}}
 
 let fresh=null,delId=null,delT;
 
@@ -152,7 +160,7 @@ function deco(t){const d=$('#deco');d.innerHTML='';const a=[...t.d.match(/\p{Ext
   s.style.cssText=`left:${Math.random()*96}%;font-size:${22+Math.random()*34}px;animation-duration:${14+Math.random()*18}s;animation-delay:-${Math.random()*20}s`;d.appendChild(s)}}
 function theme(){const b=cur(),t=THEMES.find(x=>x.id===b.theme)||THEMES[0],r=document.documentElement.style;
  r.setProperty('--bg',t.bg);r.setProperty('--ink',t.ink);r.setProperty('--panel',t.panel);r.setProperty('--acc',t.acc);r.setProperty('--accink',t.ai);
- document.body.classList.toggle('kertas',t.id==='kertas');document.body.classList.toggle('siswa',SISWA);document.body.classList.toggle('tetap',!!HID);
+ document.body.classList.toggle('kertas',t.id==='kertas');document.body.classList.toggle('siswa',SISWA);
  if(deco.k!==t.id){deco.k=t.id;deco(t)}}
 function render(){
  theme();const b=cur();$('#fab').style.display=b.id?'':'none';
@@ -196,9 +204,9 @@ function settings(isNew){
  <label>Pertanyaan refleksi</label><textarea id="b" maxlength="200">${esc(b.q)}</textarea>
  <div class="foot">${S.boards.length>1?'<button class="red" id="d">🗑 Hapus papan</button>':''}<button id="x">Batal</button><button class="go" id="ok">Simpan</button></div>`,o=>{
   let sure=false;const d=o.querySelector('#d');
-  if(d)d.onclick=()=>{if(!sure){sure=true;d.textContent='Yakin hapus?';return}const id=b.id;S.boards=S.boards.filter(x=>x.id!==id);AID=null;sync('DELETE','/boards/'+id);o.remove();render()};
+  if(d)d.onclick=async()=>{if(!sure){sure=true;d.textContent='Yakin hapus?';return}if(!await pinGuru())return;const id=b.id;S.boards=S.boards.filter(x=>x.id!==id);AID=null;sync('DELETE','/boards/'+id);o.remove();render()};
   o.querySelector('#x').onclick=()=>{o.remove();if(isNew){S.boards=S.boards.filter(x=>x!==b);AID=null;sync('DELETE','/boards/'+b.id);render()}};
-  o.querySelector('#ok').onclick=()=>{b.title=o.querySelector('#a').value.trim()||'Papan';b.q=o.querySelector('#b').value.trim()||'Tulis pertanyaanmu…';sync('PATCH','/boards/'+b.id,{title:b.title,q:b.q});o.remove();render()};
+  o.querySelector('#ok').onclick=async()=>{if(!await pinGuru())return;b.title=o.querySelector('#a').value.trim()||'Papan';b.q=o.querySelector('#b').value.trim()||'Tulis pertanyaanmu…';sync('PATCH','/boards/'+b.id,{title:b.title,q:b.q});o.remove();render()};
   o.querySelector('#b').focus()});
 }
 function themes(){
@@ -208,26 +216,33 @@ function themes(){
   o.querySelector('.thg').onclick=e=>{const b=e.target.closest('button');if(!b)return;cur().theme=b.dataset.t;sync('PATCH','/boards/'+cur().id,{theme:b.dataset.t});theme();
    o.querySelectorAll('.thg button').forEach(x=>x.classList.toggle('on',x===b))}});
 }
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
  const t=e.target.closest('.tab');if(t){AID=S.boards[+t.dataset.i].id;save();render();return}
- if(e.target.closest('#newTab')){const nb={id:uid(),title:'Papan '+(S.boards.length+1),q:'Tulis pertanyaan refleksimu di sini…',theme:cur().theme,o:Date.now(),cards:[]};S.boards.push(nb);AID=nb.id;sync('PUT','/boards/'+nb.id,{title:nb.title,q:nb.q,theme:nb.theme,o:nb.o});render();settings(true);return}
+ if(e.target.closest('#newTab')){if(!await pinGuru())return;const nb={id:uid(),title:'Papan '+(S.boards.length+1),q:'Tulis pertanyaan refleksimu di sini…',theme:cur().theme,o:Date.now(),cards:[]};S.boards.push(nb);AID=nb.id;sync('PUT','/boards/'+nb.id,{title:nb.title,q:nb.q,theme:nb.theme,o:nb.o});render();settings(true);return}
  const r=e.target.closest('[data-rx]');if(r){const c=cur().cards.find(x=>x.id===r.dataset.rx);c.rx=c.rx||{};c.rx[r.dataset.e]=(c.rx[r.dataset.e]||0)+1;sync('PUT','/boards/'+cur().id+'/cards/'+c.id+'/rx/'+encodeURIComponent(r.dataset.e),{'.sv':{increment:1}});render();return}
  const d=e.target.closest('[data-del]');if(d){const id=d.dataset.del;
-  if(delId===id){cur().cards=cur().cards.filter(x=>x.id!==id);delId=null;sync('DELETE','/boards/'+cur().id+'/cards/'+id);render()}
+  if(delId===id){if(!await pinGuru()){delId=null;render();return}cur().cards=cur().cards.filter(x=>x.id!==id);delId=null;sync('DELETE','/boards/'+cur().id+'/cards/'+id);render()}
   else{delId=id;d.classList.add('sure');d.textContent='Hapus?';clearTimeout(delT);delT=setTimeout(()=>{delId=null;render()},2500)}}
 });
 $('#fab').onclick=addCard;$('#bSet').onclick=()=>settings(false);$('#bTheme').onclick=themes;
 $('#sel').onchange=e=>{AID=e.target.value;save();render()};
 $('#bLink').onclick=links;
 $('#bQR').onclick=()=>showQR(cur());
-function showQR(b,url){if(!b)return;if(typeof qrcode==='undefined'){toast('QR butuh koneksi internet');return}
-const u=url||linkOf(b.id),q=qrcode(0,'M');q.addData(u);q.make();
+function showQR(b){if(!b)return;if(typeof qrcode==='undefined'){toast('QR butuh koneksi internet');return}
+const u=linkOf(b.id),q=qrcode(0,'M');q.addData(u);q.make();
 modal(`<div style="text-align:center"><h2 style="margin-bottom:4px">${esc(b.title)}</h2><p style="margin:0 0 14px;opacity:.75">${esc(b.q)}</p><img src="${q.createDataURL(8,4)}" alt="QR" style="width:min(320px,100%);image-rendering:pixelated;border-radius:16px;border:2px solid #e3dff2"><p style="margin:12px 0 0;font-size:1.05rem;font-weight:600">Scan untuk menjawab 📱</p><p style="font-size:.75rem;word-break:break-all;opacity:.6">${esc(u)}</p></div><div class="foot"><button class="go" id="x">Tutup</button></div>`,o=>o.querySelector('#x').onclick=()=>o.remove())}
-addEventListener('hashchange',()=>{GURU=H()==='guru';SISWA=!GURU;HID=(!GURU&&H())?H():'';if(HID)AID=HID;last='';render();if(REMOTE)load()});
-const umumLink=()=>location.href.split('#')[0],linkOf=id=>umumLink()+'#'+id;
+addEventListener('hashchange',()=>{SISWA=!!H();if(SISWA)AID=H();render()});
+const linkOf=id=>location.href.split('#')[0]+'#'+id;
 async function copy(t,b){try{await navigator.clipboard.writeText(t);b.textContent='Tersalin ✓'}catch(e){b.previousElementSibling.select();b.textContent='Tekan Ctrl+C'}setTimeout(()=>b.textContent='Salin',2000)}
-function links(){modal(`<h2>🔗 Link untuk siswa</h2><p style="margin:0;font-size:.9rem;opacity:.8"><b>Link umum</b> sama dengan kartu di portal: siswa memilih papan sendiri (papan terbaru tampil lebih dulu). <b>Link per papan</b> mengunci siswa ke satu papan.</p><label>Link umum (portal)</label><div style=\"display:flex;gap:8px\"><input readonly value=\"${esc(umumLink())}\" onfocus=\"this.select()\"><button class=\"cp\">Salin</button><button class=\"cp qr\" data-umum=\"1\">📱 QR</button></div>${S.boards.map(b=>`<label>${esc(b.title)}</label><div style="display:flex;gap:8px"><input readonly value="${esc(linkOf(b.id))}" onfocus="this.select()"><button class="cp">Salin</button><button class="cp qr" data-id="${b.id}">📱 QR</button></div>`).join('')}<div class="foot"><button class="go" id="x">Selesai</button></div>`,o=>{o.querySelector('#x').onclick=()=>o.remove();o.querySelectorAll('.cp:not(.qr)').forEach(b=>b.onclick=()=>copy(b.previousElementSibling.value,b));o.querySelectorAll('.qr').forEach(b=>b.onclick=()=>b.dataset.umum?showQR({title:'Papan Refleksi',q:'Pindai untuk menulis refleksimu'},umumLink()):showQR(S.boards.find(x=>x.id===b.dataset.id)))})}
-if(REMOTE){render();load();setInterval(()=>{if(!document.hidden)load()},8000)}
+function links(){modal(`<h2>🔗 Link untuk siswa</h2><p style="margin:0;font-size:.9rem;opacity:.8">Kirim link tiap papan ke siswa. Siswa hanya melihat satu papan itu dan bisa langsung menjawab.</p>${S.boards.map(b=>`<label>${esc(b.title)}</label><div style="display:flex;gap:8px"><input readonly value="${esc(linkOf(b.id))}" onfocus="this.select()"><button class="cp">Salin</button><button class="cp qr" data-id="${b.id}">📱 QR</button></div>`).join('')}<div class="foot"><button class="go" id="x">Selesai</button></div>`,o=>{o.querySelector('#x').onclick=()=>o.remove();o.querySelectorAll('.cp:not(.qr)').forEach(b=>b.onclick=()=>copy(b.previousElementSibling.value,b));o.querySelectorAll('.qr').forEach(b=>b.onclick=()=>showQR(S.boards.find(x=>x.id===b.dataset.id)))})}
+if(REMOTE){render();load();
+ /* Real time: tiap 2 detik (guru) / 3 detik (siswa) cek versi data di server; data penuh diambil hanya jika berubah. */
+ let LV=null,LT=0,busy=false;
+ const poll=async()=>{if(document.hidden||busy)return;busy=true;
+  try{const r=await fetch(base+'?aksi=v',{cache:'no-store'});const v=(await r.text()).trim();
+   if(v!==LV||Date.now()-LT>30000){if(await load()){LV=v;LT=Date.now()}}}catch(e){}busy=false};
+ setInterval(poll,SISWA?3000:2000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()})}
 else{if(!S.boards.length){const b=seed();b.cards=[{id:uid(),name:'Contoh Siswa',text:'Hari ini aku belajar bahwa berdiskusi itu seru kalau semua teman berani bicara!',emoji:'🤩',color:'#FFF3A3',rx:{'❤️':2},t:2},{id:uid(),name:'Siswa Lain',text:'Aku masih bingung bagian akhir, tapi besok mau tanya lagi ke teman.',emoji:'🤔',color:'#BDE3FF',rx:{'👍':1},t:1}];S.boards=[b];save()}
  render();toast('Mode demo: jawaban hanya tersimpan di perangkat ini')}
 </script>
